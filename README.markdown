@@ -42,7 +42,7 @@ ih.delete :Abc     # 10
 ih.keys            # ['DEF']
 
 # Hashes and Hashes in Arrays as values are automatically converted to be insensitive
-# (Useful for processing YAML inputs)
+# (Useful when processing YAML inputs)
 ih['kids'] = { :hello => [ { :world => '!!!' } ] }
 ih[:kids]['Hello'].first['WORLD']  # !!!
 ```
