@@ -9,7 +9,8 @@ Gem::Specification.new do |s|
   s.email       = ["junegunn.c@gmail.com"]
   s.homepage    = ""
   s.summary     = %q{Case-insensitive Ruby Hash}
-  s.description = %q{Case-insensitive Ruby Hash}
+
+  s.description = %q{Hash with case-insensitive, Symbol/String-indifferent key access}
 
   s.rubyforge_project = "insensitive_hash"
 
