@@ -55,6 +55,9 @@ class TestInsensitiveHash < Test::Unit::TestCase
     assert_equal 3, ih.keys.length
     assert_equal 1, ih[:c].first[:x]
     assert_equal 2, ih[:c].last['Y']
+
+    ih[5] = 50
+    assert_equal 50, ih[5]
   end
 
   def test_delete

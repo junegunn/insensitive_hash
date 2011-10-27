@@ -1,6 +1,6 @@
 # insensitive_hash
 
-Hash with case-insensitive, Symbol/String-indifferent key access
+Hash with case-insensitive, Symbol/String-indifferent key access.
 
 ## Installation
 ```
@@ -11,6 +11,8 @@ gem install insensitive_hash
 
 ### Instantiation
 ```ruby
+require 'insensitive_hash'
+
 # Monkey-patched Hash#insensitive method
 {'abc' => 1, :def => 2}.insensitive
 
@@ -23,28 +25,29 @@ InsensitiveHash.new(:abc => 1, 'DEF' => 2)
 ih = InsensitiveHash.new(:abc => 1, 'DEF' => 2)
 
 # Case-insensitive, Symbol/String-indifferent access.
-ih['Abc']      # 1
-ih[:ABC]       # 1
-ih['abc']      # 1
-ih[:abc]       # 1
+ih['Abc']          # 1
+ih[:ABC]           # 1
+ih['abc']          # 1
+ih[:abc]           # 1
+ih.has_key?(:DeF)  # true
 
 ih['ABC'] = 10
 
 # keys and values
-ih.keys        # ['DEF', 'ABC']
-ih.values      # [2, 10]
+ih.keys            # ['DEF', 'ABC']
+ih.values          # [2, 10]
 
 # delete
-ih.delete :Abc # 10
-ih.keys        # ['DEF']
+ih.delete :Abc     # 10
+ih.keys            # ['DEF']
 
 # Hashes and Hashes in Arrays as values are automatically converted to be insensitive
 # (Useful for processing YAML inputs)
-ih['kids'] = { :hello => [ { :world => 1 } ] }
-ih[:kids]['Hello'].first['WORLD']  # 1
+ih['kids'] = { :hello => [ { :world => '!!!' } ] }
+ih[:kids]['Hello'].first['WORLD']  # !!!
 ```
 
-## Contributing to oxm
+## Contributing to insensitive_hash
  
 * Check out the latest master to make sure the feature hasn't been implemented or the bug hasn't been fixed yet
 * Check out the issue tracker to make sure someone already hasn't requested it and/or contributed it
