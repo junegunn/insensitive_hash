@@ -5,7 +5,7 @@ class InsensitiveHash < Hash
     @key_map = {}
 
     hash.each do |key, value|
-      self[key] = InsensitiveHash.wrap value
+      self[key] = value
     end
   end
 
