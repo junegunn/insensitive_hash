@@ -45,6 +45,9 @@ ih.keys            # ['DEF']
 # (Useful when processing YAML inputs)
 ih['kids'] = { :hello => [ { :world => '!!!' } ] }
 ih[:kids]['Hello'].first['WORLD']  # !!!
+
+ih['one'] = [ [ [ { :a => { :b => { :c => 'd' } } } ] ] ]
+ih['one'].first.first.first['A']['b'][:C]  # 'd'
 ```
 
 ## Contributing to insensitive_hash
