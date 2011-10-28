@@ -22,9 +22,6 @@ class TestInsensitiveHash < Test::Unit::TestCase
         end
       end
     end
-
-    #hash = {"source db"=>{"driver"=>"com.mysql.jdbc.Driver", "url"=>"jdbc:mysql://localhost/test", "user"=>"root"}, "target db"=>{"driver"=>"com.mysql.jdbc.Driver", "url"=>"jdbc:mysql://localhost/test", "user"=>"root"}, "mappings"=>[{"table name"=>"a", "writers/partition"=>0}]}
-    #p Marshal.load(Marshal.dump(hash)).insensitive
   end
 
   def test_has_key_set
@@ -55,6 +52,12 @@ class TestInsensitiveHash < Test::Unit::TestCase
     assert_equal 3, ih.keys.length
     assert_equal 1, ih[:c].first[:x]
     assert_equal 2, ih[:c].last['Y']
+
+    # Deeeeeper nesting
+    ih['c'] = [ [ [ { 'x' => 1 }, { :y => 2 } ] ] ]
+    assert_equal 2, ih[:c].first.first.last[:Y]
+    ih['c'] = { 'a' => { 'a' => { 'a' => 100 } } }
+    assert_equal 100, ih[:C][:a][:A]['A']
 
     ih[5] = 50
     assert_equal 50, ih[5]

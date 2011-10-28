@@ -2,7 +2,7 @@ require "insensitive_hash/version"
 
 class InsensitiveHash < Hash
   def initialize hash = {}
-    @key_map = hash.keys.inject({}) { |h, k| h[encode k] = k; h }
+    @key_map = {}
 
     hash.each do |key, value|
       self[key] = InsensitiveHash.wrap value
