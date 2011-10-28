@@ -1,5 +1,4 @@
 # insensitive_hash
-
 Hash with case-insensitive, Symbol/String-indifferent key access.
 
 ## Installation
@@ -20,7 +19,7 @@ require 'insensitive_hash'
 InsensitiveHash.new(:abc => 1, 'DEF' => 2)
 ```
 
-### Usage
+### Basic usage
 ```ruby
 ih = InsensitiveHash.new(:abc => 1, 'DEF' => 2)
 
@@ -40,14 +39,27 @@ ih.values          # [2, 10]
 # delete
 ih.delete :Abc     # 10
 ih.keys            # ['DEF']
+```
 
-# Hashes and Hashes in Arrays as values are automatically converted to be insensitive
+### "Inherited insensitivity"
+```ruby
+# Hash values are recursively converted to be insensitive
 # (Useful when processing YAML inputs)
+ih = InsensitiveHash.new
 ih['kids'] = { :hello => [ { :world => '!!!' } ] }
 ih[:kids]['Hello'].first['WORLD']  # !!!
 
 ih['one'] = [ [ [ { :a => { :b => { :c => 'd' } } } ] ] ]
 ih['one'].first.first.first['A']['b'][:C]  # 'd'
+```
+
+### Processing case-insensitive YAML input
+```ruby
+db = YAML.load(File.read 'database.yml').insensitive
+
+# Access values however you like
+db['Development']['ADAPTER']
+db[:production][:adapter]
 ```
 
 ## Contributing to insensitive_hash
