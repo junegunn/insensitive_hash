@@ -7,7 +7,7 @@ Gem::Specification.new do |s|
   s.version     = InsensitiveHash::VERSION
   s.authors     = ["Junegunn Choi"]
   s.email       = ["junegunn.c@gmail.com"]
-  s.homepage    = ""
+  s.homepage    = "https://github.com/junegunn/insensitive_hash"
   s.summary     = %q{Case-insensitive Ruby Hash}
 
   s.description = %q{Hash with case-insensitive, Symbol/String-indifferent key access}
