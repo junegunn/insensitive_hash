@@ -1,7 +1,7 @@
 require 'rubygems'
 require 'test/unit'
 $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
-require 'insensitive_hash'
+require 'insensitive_hash/minimal'
 
 class TestInsensitiveHash < Test::Unit::TestCase
   def test_from_hash
@@ -11,6 +11,11 @@ class TestInsensitiveHash < Test::Unit::TestCase
       :c  => { :D => [ { 'e' => 3 } ] }
     }
 
+    assert_raise(NoMethodError) {
+      hash.insensitive
+    }
+
+    require 'insensitive_hash'
     [hash.insensitive, InsensitiveHash.new(hash)].each do |ih|
       assert       ih.is_a?(Hash)
       assert_equal InsensitiveHash, ih.class
