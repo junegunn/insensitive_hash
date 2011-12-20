@@ -19,13 +19,7 @@ require 'insensitive_hash'
 InsensitiveHash.new(:abc => 1, 'DEF' => 2)
 ```
 
-If you don't like to have Hash#insensitive method, require 'insensitive_hash/minimal'
-
-```ruby
-require 'insensitive_hash/minimal'
-
-InsensitiveHash.new(:abc => 1, 'DEF' => 2)
-```
+If you don't like to have Hash#insensitive method, `require 'insensitive_hash/minimal'`
 
 ### Basic usage
 ```ruby
