@@ -131,13 +131,18 @@ class TestInsensitiveHash < Test::Unit::TestCase
   end
 
   def test_to_hash
-    h = InsensitiveHash[:a, 1]
+    h = InsensitiveHash[:a, 1, :b, {:c => 2}]
     assert_equal 1, h[:A]
+    assert_equal 2, h['B']['C']
 
     h = h.to_hash
     assert_equal Hash, h.class
     assert_equal nil, h[:A]
     assert_equal 1, h[:a]
+    assert_equal 2, h[:b][:c]
+    pend("TBD: Recursive conversion") do
+      assert_equal nil, h[:b]['C']
+    end
   end
 
   def test_compare_by_identity

@@ -11,6 +11,13 @@ class InsensitiveHash < Hash
     @key_map = {}
   end
   
+  # Returns a normal, sensitive Hash
+  # @return [Hash]
+  def to_hash
+    {}.merge self
+  end
+  alias sensitive to_hash
+
   def self.[] *init
     h = Hash[*init]
     InsensitiveHash.new.tap do |ih|
@@ -74,10 +81,6 @@ class InsensitiveHash < Hash
     super.tap do |ret|
       @key_map.delete_if { |k, v| v == ret.first }
     end
-  end
-
-  def to_hash
-    {}.merge self
   end
 
   def values_at *keys

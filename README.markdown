@@ -20,6 +20,7 @@ ih = InsensitiveHash[ :abc => 1, 'DEF' => 2 ]
 ih = InsensitiveHash[ :abc, 1, 'DEF', 2 ]
 
 # Revert to normal Hash
+h = ih.sensitive
 h = ih.to_hash
 ```
 
