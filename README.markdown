@@ -13,17 +13,21 @@ gem install insensitive_hash
 require 'insensitive_hash'
 
 # Monkey-patched Hash#insensitive method
-{'abc' => 1, :def => 2}.insensitive
+ih = {'abc' => 1, :def => 2}.insensitive
 
 # Or,
-InsensitiveHash.new(:abc => 1, 'DEF' => 2)
+ih = InsensitiveHash[ :abc => 1, 'DEF' => 2 ]
+ih = InsensitiveHash[ :abc, 1, 'DEF', 2 ]
+
+# Revert to normal Hash
+h = ih.to_hash
 ```
 
 If you don't like to have Hash#insensitive method, `require 'insensitive_hash/minimal'`
 
 ### Basic usage
 ```ruby
-ih = InsensitiveHash.new(:abc => 1, 'DEF' => 2)
+ih = InsensitiveHash[:abc => 1, 'DEF' => 2]
 
 # Case-insensitive, Symbol/String-indifferent access.
 ih['Abc']          # 1

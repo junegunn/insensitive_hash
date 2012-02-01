@@ -3,7 +3,7 @@ require 'insensitive_hash/insensitive_hash'
 
 class Hash
   def insensitive
-    InsensitiveHash.new self
+    InsensitiveHash[ self ]
   end
 end
 

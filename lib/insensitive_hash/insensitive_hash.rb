@@ -1,40 +1,107 @@
 class InsensitiveHash < Hash
-  def initialize hash = {}
-    @key_map = {}
+  attr_reader :key_map
 
-    hash.each do |key, value|
-      self[key] = value
+  def initialize default = nil, &block
+    if block_given?
+      super &block
+    else
+      super
+    end
+
+    @key_map = {}
+  end
+  
+  def self.[] *init
+    h = Hash[*init]
+    InsensitiveHash.new.tap do |ih|
+      h.each do |key, value|
+        ih[key] = value
+      end
     end
   end
 
-  def [] key
-    super(@key_map[encode key])
+  %w[[] assoc has_key? include? key? member?].each do |symb|
+    class_eval <<-EVAL
+      def #{symb} key
+        super lookup_key(key)
+      end
+    EVAL
   end
 
   def []= key, value
-    delete key
+    ekey = encode key
+    if @key_map.has_key? ekey
+      delete @key_map[ekey]
+    end
+
     @key_map[encode key] = key
+    super(lookup_key(key), InsensitiveHash.wrap(value))
+  end
+  alias store []=
 
-    super(key, InsensitiveHash.wrap(value))
+  def merge! other_hash
+    other_hash.each do |key, value|
+      self[key] = value
+    end
+    self
+  end
+  alias update! merge!
+
+  def merge other_hash
+    InsensitiveHash[self].tap do |ih|
+      ih.merge! other_hash
+    end
+  end
+  alias update merge
+
+  def delete key, &block
+    super lookup_key(key, true), &block
   end
 
-  def has_key? key
-    super @key_map[encode key]
+  def clear
+    @key_map.clear
+    super
   end
 
-  def delete key
-    super @key_map[encode key]
+  def replace other
+    clear
+    other.each do |k, v|
+      self[k] = v
+    end
+  end
+
+  def shift
+    super.tap do |ret|
+      @key_map.delete_if { |k, v| v == ret.first }
+    end
+  end
+
+  def to_hash
+    {}.merge self
+  end
+
+  def values_at *keys
+    keys.map { |k| self[k] }
   end
 
 private
   def self.wrap value
     case value
     when Hash
-      value.class == InsensitiveHash ? value : InsensitiveHash.new(value)
+      value.class == InsensitiveHash ? value : InsensitiveHash[value]
     when Array
       value.map { |v| InsensitiveHash.wrap v }
     else
       value
+    end
+  end
+
+  def lookup_key key, delete = false
+    ekey = encode key
+    if @key_map.has_key?(ekey)
+      delete ? @key_map.delete(ekey) : @key_map[ekey]
+    else
+      key
     end
   end
 
