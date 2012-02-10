@@ -235,11 +235,6 @@ class TestInsensitiveHash < Test::Unit::TestCase
     assert_equal 3, h.each.count
   end
 
-  def test_fetch
-    h = InsensitiveHash[{ :a => 1, :b => 2, :c => 3}]
-    assert_raise(KeyError) { h.fetch('D') }
-  end
-
   def test_has_value
     h = InsensitiveHash[{ :a => 1, :b => 2, :c => 3}]
     assert h.value?(3)
@@ -271,6 +266,17 @@ class TestInsensitiveHash < Test::Unit::TestCase
   def test_values_at
     h = InsensitiveHash[{:a => 1, :b => 2}]
     assert_equal [2, 1], h.values_at('B', :A)
+  end
+
+  def test_fetch
+    h = InsensitiveHash[{:a => 1, :b => 2}]
+    ['a', 'A', :A].each do |k|
+      assert_equal 1, h.fetch(k)
+      assert_equal 1, h.fetch(k) { nil }
+    end
+    assert_equal 3, h.fetch(:c, 3)
+    assert_equal 3, h.fetch(:c) { 3 }
+    assert_raise(KeyError) { h.fetch('D') }
   end
 end
 

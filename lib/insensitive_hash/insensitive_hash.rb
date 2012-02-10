@@ -87,6 +87,11 @@ class InsensitiveHash < Hash
     keys.map { |k| self[k] }
   end
 
+  def fetch *args, &block
+    args[0] = lookup_key(args[0]) if args.first
+    super *args, &block
+  end
+
 private
   def self.wrap value
     case value

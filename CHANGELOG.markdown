@@ -1,3 +1,6 @@
+### 0.2.1 / 2012/02/10
+* Bug fix: Insensitive `fetch`
+
 ### 0.2.0 / 2012/02/01
 * Major rewrite
  * Constructor syntaxes have been changed to match those of standard Hash (not backward-compatible)
