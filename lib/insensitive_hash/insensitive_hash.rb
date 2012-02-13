@@ -1,6 +1,4 @@
 class InsensitiveHash < Hash
-  # @return [Proc]
-  attr_reader :encoder
 
   def initialize default = nil, &block
     if block_given?
@@ -10,17 +8,23 @@ class InsensitiveHash < Hash
     end
 
     @key_map = {}
-    @encoder = proc { |str| str.downcase }
+    @underscore = false
   end
 
-  # @yieldparam [String] key
-  # @yieldreturn [String]
-  # @return [InsensitiveHash]
-  def encoder= pr
-    raise ArgumentError.new("Not Proc") unless pr.is_a?(Proc)
-    @encoder = pr
-    @key_map = @key_map.inject({}) { |h, (k, v)| h[encode k] = v; h }
-    @encoder
+
+  # Sets whether to replace spaces in String keys to underscores
+  # @param [Boolean] us
+  # @return [Boolean]
+  def underscore= us
+    raise ArgumentError.new("Not true or false") unless [true, false].include?(us)
+    @underscore = us
+    @key_map = self.inject({}) { |h, (k, v)| h[encode k] = k; h }
+    us
+  end
+
+  # @return [Boolean] Whether to replace spaces in String keys to underscores
+  def underscore?
+    @underscore
   end
   
   # Returns a normal, sensitive Hash
@@ -127,10 +131,13 @@ private
 
   def encode key
     case key
-    when String
-      @encoder.call key
-    when Symbol
-      @encoder.call key.to_s
+    when String, Symbol
+      key = key.to_s.downcase
+      if @underscore
+        key.gsub(' ', '_')
+      else
+        key
+      end
     else
       key
     end

@@ -72,11 +72,11 @@ db['Development']['ADAPTER']
 db[:production][:adapter]
 ```
 
-### Customizing insensitiviy
+### Replacing spaces in String keys to underscores
 ```ruby
 h = { 'A key with spaces' => true }
 
-ih = h.insensitive { |s| s.downcase.gsub ' ', '_' }
+ih = h.insensitive :underscore => true
 ih[:a_key_with_spaces]  # true
 ```
 

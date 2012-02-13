@@ -2,14 +2,11 @@ require 'insensitive_hash/version'
 require 'insensitive_hash/insensitive_hash'
 
 class Hash
-  # @yield [key] Specifies how to encode a String key
-  # @yieldparam [String] key
-  # @yieldreturn [String]
   # @return [InsensitiveHash]
-  def insensitive &encoder
-    InsensitiveHash[ self ].tap { |h|
-      h.encoder = encoder if encoder
-    }
+  def insensitive options = { :underscore => false }
+    InsensitiveHash[ self ].tap do |ih|
+      ih.underscore = options[:underscore] if options.has_key?(:underscore)
+    end
   end
 end
 
