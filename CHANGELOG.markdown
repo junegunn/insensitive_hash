@@ -1,5 +1,6 @@
 ### 0.2.2 / 2012/02/13
 * :underscore option added
+* `Insensitive::KeyClashError` added for safer operations
 
 ### 0.2.1 / 2012/02/10
 * Bug fix: Insensitive `fetch`

@@ -9,7 +9,7 @@ class InsensitiveHash < Hash
       super
     end
 
-    @key_map = {}
+    @key_map    = {}
     @underscore = false
   end
 
@@ -20,12 +20,10 @@ class InsensitiveHash < Hash
     raise ArgumentError.new("Not true or false") unless [true, false].include?(us)
 
     # Check key clash
-    self.keys.map { |k| encode k, us }.tap { |keys|
-      raise KeyClashError.new("Key clash detected") if keys != keys.uniq
-    }
+    detect_clash self, us
 
     @underscore = us
-    @key_map = {}
+    @key_map    = {}
     self.keys.each do |k|
       self[k] = self.delete(k)
     end
@@ -63,17 +61,15 @@ class InsensitiveHash < Hash
   end
 
   def []= key, value
+    delete key
     ekey = encode key, @underscore
-    if @key_map.has_key? ekey
-      delete @key_map[ekey]
-    end
-
     @key_map[ekey] = key
-    super(lookup_key(key), InsensitiveHash.wrap(value, underscore?))
+    super key, wrap(value, underscore?)
   end
   alias store []=
 
   def merge! other_hash
+    detect_clash other_hash, underscore?
     other_hash.each do |key, value|
       self[key] = value
     end
@@ -83,6 +79,7 @@ class InsensitiveHash < Hash
 
   def merge other_hash
     InsensitiveHash[self].tap do |ih|
+      ih.underscore = self.underscore?
       ih.merge! other_hash
     end
   end
@@ -98,6 +95,8 @@ class InsensitiveHash < Hash
   end
 
   def replace other
+    detect_clash other, underscore?
+
     clear
     other.each do |k, v|
       self[k] = v
@@ -120,14 +119,14 @@ class InsensitiveHash < Hash
   end
 
 private
-  def self.wrap value, us
+  def wrap value, us
     case value
     when InsensitiveHash
       value.tap { |ih| ih.underscore = us || ih.underscore? }
     when Hash
       InsensitiveHash[value].tap { |ih| ih.underscore = us }
     when Array
-      value.map { |v| InsensitiveHash.wrap v, us }
+      value.map { |v| wrap v, us }
     else
       value
     end
@@ -154,6 +153,12 @@ private
     else
       key
     end
+  end
+
+  def detect_clash hash, us
+    hash.keys.map { |k| encode k, us }.tap { |ekeys|
+      raise KeyClashError.new("Key clash detected") if ekeys != ekeys.uniq
+    }
   end
 end
 

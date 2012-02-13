@@ -78,6 +78,12 @@ h = { 'A key with spaces' => true }
 
 ih = h.insensitive :underscore => true
 ih[:a_key_with_spaces]  # true
+
+# Or,
+ih = InsensitiveHash[ h ]
+ih.underscore = true
+ih.underscore?  # true
+ih[:a_key_with_spaces]  # true
 ```
 
 ## Contributing to insensitive_hash

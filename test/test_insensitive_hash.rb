@@ -94,6 +94,13 @@ class TestInsensitiveHash < Test::Unit::TestCase
     h = { 'A key with spaces' => true }
     ih = h.insensitive :underscore => true
     assert ih[:a_key_with_spaces]
+    assert ih.underscore?
+
+    # FIXME: from README
+    ih = InsensitiveHash[ h ]
+    ih.underscore = true
+    assert ih[:a_key_with_spaces]
+    assert ih.underscore?
   end
 
   def test_delete
@@ -109,12 +116,23 @@ class TestInsensitiveHash < Test::Unit::TestCase
 
   def test_merge
     [:merge, :update].each do |method|
-      ih = InsensitiveHash[:a => 1]
+      ih = InsensitiveHash[:a => 1, 'hello world' => 2]
       ih2 = ih.send(method, :b => 2)
 
-      assert_equal [:a], ih.keys
-      assert_equal [:a, :b], ih2.keys
+      assert_equal [:a, 'hello world'], ih.keys
+      assert_equal [:a, 'hello world', :b], ih2.keys
       assert ih2.has_key?('B'), 'correctly merged another hash'
+
+      assert_nil ih[:hello_world]
+      assert_nil ih2[:hello_world]
+
+      ih.underscore = true
+      assert_equal 2, ih[:hello_world]
+      assert_equal 2, ih.send(method, :b => 2)[:hello_world]
+
+      ih.underscore = false
+      assert_nil ih[:hello_world]
+      assert_nil ih.send(method, :b => 2)[:hello_world]
 
       ih2.delete 'b'
       assert ih2.has_key?('B') == false
@@ -133,6 +151,32 @@ class TestInsensitiveHash < Test::Unit::TestCase
       ih2.delete 'b'
       assert ih2.has_key?('B') == false
     end
+  end
+
+  def test_merge_clash
+    ih = InsensitiveHash.new
+    ih2 = InsensitiveHash.new
+    ih2.underscore = true
+
+    [:merge, :merge!, :update, :update!].each do |method|
+      [ih, ih2].each do |h|
+        assert_raise(InsensitiveHash::KeyClashError) {
+          h.send(method, { :a => 1, :A => 1, 'A' => 1})
+        }
+        assert_raise(InsensitiveHash::KeyClashError) {
+          h.send(method, { 'a' => 1, 'A' => 1 })
+        }
+      end
+
+      ih.send(method, { :hello_world => 1, 'hello world' => 2})
+      assert_raise(InsensitiveHash::KeyClashError) {
+        ih2.send(method, { :hello_world => 1, 'hello world' => 2})
+      }
+    end
+
+    assert_raise(InsensitiveHash::KeyClashError) {
+      ih.merge({ :a => 1, :A => 1, 'A' => 1})
+    }
   end
 
   def test_assoc
@@ -269,6 +313,15 @@ class TestInsensitiveHash < Test::Unit::TestCase
 
     assert !h.has_key?('A')
     assert h.has_key?('B')
+
+    h = InsensitiveHash.new
+    h.replace({ 'hello world' => 1, :hello_world => 2 })
+
+    h = InsensitiveHash.new
+    h.underscore = true
+    assert_raise(InsensitiveHash::KeyClashError) {
+      h.replace({ 'hello world' => 1, :hello_world => 2 })
+    }
   end
 
   def test_rassoc
@@ -380,7 +433,7 @@ class TestInsensitiveHash < Test::Unit::TestCase
   end
 
   def test_underscore_clash
-    h = {}.insensitive
+    h = InsensitiveHash.new
     h['hello world'] = 1
     h['HELLO_world'] = 2
     assert_equal 1, h['HELLO WORLD']
@@ -394,6 +447,17 @@ class TestInsensitiveHash < Test::Unit::TestCase
     assert_equal ['HELLO_world'], h.keys
     assert_equal 2, h['HELLO WORLD']
     assert_equal 2, h[:HELLO_WORLD]
+  end
+
+  def test_unset_underscore
+    h = InsensitiveHash.new
+    h.underscore = true
+    h[:hello_world] = 1
+    h.underscore = false
+    h['hello world'] = 2
+
+    assert_equal [:hello_world, 'hello world'], h.keys
+    assert_equal 2, h['Hello World']
   end
 end
 
