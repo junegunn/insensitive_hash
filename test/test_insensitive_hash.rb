@@ -359,19 +359,20 @@ class TestInsensitiveHash < Test::Unit::TestCase
     assert_equal 1, h['key with spaces']
     assert_nil      h[:key_with_spaces]
 
+    test_keys = [
+      :KEY_WITH_SPACES,
+      :Key_with_spaces,
+      :key_with_spaces,
+      'key with_spaces',
+      'KEY_WITH spaces'
+    ]
+
     10.times do
       assert_raise(ArgumentError) { h.underscore = 'wat' }
       assert !h.underscore?
       h.underscore = true
       assert h.underscore?
 
-      test_keys = [
-        :KEY_WITH_SPACES,
-        :Key_with_spaces,
-        :key_with_spaces,
-        'key with_spaces',
-        'KEY_WITH spaces'
-      ]
       
       test_keys.each do |k|
         assert_equal 1, h[k]
@@ -386,6 +387,13 @@ class TestInsensitiveHash < Test::Unit::TestCase
       end
       assert_equal ['Key with spaces'], h.keys
     end
+
+    h.underscore = true
+    test_keys.each do |tk|
+      h[tk] = 1
+    end
+
+    assert_equal [test_keys.last], h.keys
   end
 
   def test_underscore_inheritance
