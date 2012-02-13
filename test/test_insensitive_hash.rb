@@ -335,17 +335,63 @@ class TestInsensitiveHash < Test::Unit::TestCase
     end
   end
 
+  def test_underscore_inheritance
+    h = InsensitiveHash[
+      {
+        'Key with spaces' => {
+          'Another key with spaces' => 1
+        },
+        'Key 2 with spaces' =>
+          InsensitiveHash['Yet another key with spaces' => 2].tap { |ih| ih.underscore = true },
+        'Key 3 with spaces' =>
+          InsensitiveHash['Yet another key with spaces' => 3]
+      }
+    ]
+
+    assert_equal 1,     h['key with spaces']['another key with spaces']
+    assert_equal false, h['key with spaces'].underscore?
+    assert_nil          h['key with spaces'][:another_key_with_spaces]
+    assert_nil          h[:key_with_spaces]
+
+    assert_equal 2, h['key 2 with spaces']['yet another key with spaces']
+    assert_equal 2, h['key 2 with spaces'][:yet_another_key_with_spaces]
+    assert_nil      h[:key_2_with_spaces]
+
+    assert_equal 3, h['key 3 with spaces']['yet another key with spaces']
+    assert_nil      h['key 3 with spaces'][:yet_another_key_with_spaces]
+    assert_nil      h[:key_3_with_spaces]
+
+    h.underscore = true
+    assert_equal true, h[:key_with_spaces].underscore?
+    assert_equal 1,    h[:key_with_spaces][:another_key_with_spaces]
+    assert_equal true, h[:key_2_with_spaces].underscore?
+    assert_equal 2,    h[:key_2_with_spaces][:yet_another_key_with_spaces]
+    assert_equal true, h[:key_3_with_spaces].underscore?
+    assert_equal 3,    h[:key_3_with_spaces][:yet_another_key_with_spaces]
+
+    h.underscore = false
+    assert_nil h[:key_with_spaces]
+    assert_nil h[:key_2_with_spaces]
+    assert_nil h[:key_3_with_spaces]
+
+    assert_equal false, h.underscore?
+    assert_equal true,  h['key 2 with spaces'].underscore?
+    assert_equal true,  h['key 3 with spaces'].underscore?
+  end
+
   def test_underscore_clash
     h = {}.insensitive
     h['hello world'] = 1
-    h['hello_world'] = 2
+    h['HELLO_world'] = 2
     assert_equal 1, h['HELLO WORLD']
     assert_equal 2, h['HELLO_WORLD']
-    assert_equal ['hello world', 'hello_world'], h.keys
+    assert_equal ['hello world', 'HELLO_world'], h.keys
 
-    # FIXME
+    assert_raise(InsensitiveHash::KeyClashError) { h.underscore = true }
+    h.delete('hello world')
     h.underscore = true
-    assert_equal ['hello world', 'hello_world'], h.keys
+
+    assert_equal ['HELLO_world'], h.keys
     assert_equal 2, h['HELLO WORLD']
     assert_equal 2, h[:HELLO_WORLD]
   end

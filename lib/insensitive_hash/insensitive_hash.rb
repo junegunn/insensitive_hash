@@ -1,4 +1,6 @@
 class InsensitiveHash < Hash
+  class KeyClashError < Exception
+  end
 
   def initialize default = nil, &block
     if block_given?
@@ -11,14 +13,23 @@ class InsensitiveHash < Hash
     @underscore = false
   end
 
-
   # Sets whether to replace spaces in String keys to underscores
   # @param [Boolean] us
   # @return [Boolean]
   def underscore= us
     raise ArgumentError.new("Not true or false") unless [true, false].include?(us)
+
+    # Check key clash
+    self.keys.map { |k| encode k, us }.tap { |keys|
+      raise KeyClashError.new("Key clash detected") if keys != keys.uniq
+    }
+
     @underscore = us
-    @key_map = self.inject({}) { |h, (k, v)| h[encode k] = k; h }
+    @key_map = {}
+    self.keys.each do |k|
+      self[k] = self.delete(k)
+    end
+
     us
   end
 
@@ -52,13 +63,13 @@ class InsensitiveHash < Hash
   end
 
   def []= key, value
-    ekey = encode key
+    ekey = encode key, @underscore
     if @key_map.has_key? ekey
       delete @key_map[ekey]
     end
 
-    @key_map[encode key] = key
-    super(lookup_key(key), InsensitiveHash.wrap(value))
+    @key_map[ekey] = key
+    super(lookup_key(key), InsensitiveHash.wrap(value, underscore?))
   end
   alias store []=
 
@@ -109,19 +120,21 @@ class InsensitiveHash < Hash
   end
 
 private
-  def self.wrap value
+  def self.wrap value, us
     case value
+    when InsensitiveHash
+      value.tap { |ih| ih.underscore = us || ih.underscore? }
     when Hash
-      value.class == InsensitiveHash ? value : InsensitiveHash[value]
+      InsensitiveHash[value].tap { |ih| ih.underscore = us }
     when Array
-      value.map { |v| InsensitiveHash.wrap v }
+      value.map { |v| InsensitiveHash.wrap v, us }
     else
       value
     end
   end
 
   def lookup_key key, delete = false
-    ekey = encode key
+    ekey = encode key, @underscore
     if @key_map.has_key?(ekey)
       delete ? @key_map.delete(ekey) : @key_map[ekey]
     else
@@ -129,11 +142,11 @@ private
     end
   end
 
-  def encode key
+  def encode key, us
     case key
     when String, Symbol
       key = key.to_s.downcase
-      if @underscore
+      if us
         key.gsub(' ', '_')
       else
         key
