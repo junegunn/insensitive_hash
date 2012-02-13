@@ -1,5 +1,6 @@
 class InsensitiveHash < Hash
-  attr_reader :key_map
+  # @return [Proc]
+  attr_reader :encoder
 
   def initialize default = nil, &block
     if block_given?
@@ -9,6 +10,17 @@ class InsensitiveHash < Hash
     end
 
     @key_map = {}
+    @encoder = proc { |str| str.downcase }
+  end
+
+  # @yieldparam [String] key
+  # @yieldreturn [String]
+  # @return [InsensitiveHash]
+  def encoder= pr
+    raise ArgumentError.new("Not Proc") unless pr.is_a?(Proc)
+    @encoder = pr
+    @key_map = @key_map.inject({}) { |h, (k, v)| h[encode k] = v; h }
+    @encoder
   end
   
   # Returns a normal, sensitive Hash
@@ -116,9 +128,9 @@ private
   def encode key
     case key
     when String
-      key.downcase
+      @encoder.call key
     when Symbol
-      key.to_s.downcase
+      @encoder.call key.to_s
     else
       key
     end

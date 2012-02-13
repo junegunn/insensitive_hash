@@ -1,3 +1,6 @@
+### 0.2.2 / 2012/02/13
+* Customizable insensitivity
+
 ### 0.2.1 / 2012/02/10
 * Bug fix: Insensitive `fetch`
 

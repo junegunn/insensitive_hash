@@ -1,12 +1,15 @@
-# insensitive_hash
+insensitive_hash
+================
 Hash with case-insensitive, Symbol/String-indifferent key access.
 
-## Installation
+Installation
+------------
 ```
 gem install insensitive_hash
 ```
 
-## Examples
+Examples
+--------
 
 ### Instantiation
 ```ruby
@@ -67,6 +70,14 @@ db = YAML.load(File.read 'database.yml').insensitive
 # Access values however you like
 db['Development']['ADAPTER']
 db[:production][:adapter]
+```
+
+### Customizing insensitiviy
+```ruby
+h = { 'A key with spaces' => true }
+
+ih = h.insensitive { |s| s.downcase.gsub ' ', '_' }
+ih[:a_key_with_spaces]  # true
 ```
 
 ## Contributing to insensitive_hash

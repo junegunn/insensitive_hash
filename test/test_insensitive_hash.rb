@@ -73,6 +73,21 @@ class TestInsensitiveHash < Test::Unit::TestCase
         end
       end
     end
+
+    # FIXME: test insensitive call with encoder
+    h = InsensitiveHash[{'Key with spaces' => 1}]
+    h2 = h.insensitive { |str| str.downcase.gsub ' ', '_' }
+
+    assert_equal 1, h['key with spaces']
+    assert_nil      h[:key_with_spaces]
+    assert_equal 1, h2[:KEY_WITH_SPACES]
+    assert_equal 1, h2[:Key_with_spaces]
+    assert_equal ['Key with spaces'], h.keys
+    assert_equal ['Key with spaces'], h2.keys
+
+    h = { 'A key with spaces' => true }
+    ih = h.insensitive { |s| s.downcase.gsub ' ', '_' }
+    assert ih[:a_key_with_spaces]
   end
 
   def test_delete
@@ -277,6 +292,18 @@ class TestInsensitiveHash < Test::Unit::TestCase
     assert_equal 3, h.fetch(:c, 3)
     assert_equal 3, h.fetch(:c) { 3 }
     assert_raise(KeyError) { h.fetch('D') }
+  end
+
+  def test_encoder
+    h = InsensitiveHash[{'Key with spaces' => 1}]
+
+    assert_equal 1, h['key with spaces']
+    assert_nil      h[:key_with_spaces]
+
+    h.encoder = proc { |str| str.downcase.gsub(' ', '_') }
+    assert_equal 1, h[:KEY_WITH_SPACES]
+    assert_equal 1, h[:Key_with_spaces]
+    assert_equal ['Key with spaces'], h.keys
   end
 end
 
