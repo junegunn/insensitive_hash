@@ -78,8 +78,8 @@ class InsensitiveHash < Hash
   alias update! merge!
 
   def merge other_hash
-    InsensitiveHash[self].tap do |ih|
-      ih.underscore = self.underscore?
+    InsensitiveHash.new.tap do |ih|
+      ih.replace self
       ih.merge! other_hash
     end
   end
@@ -95,7 +95,15 @@ class InsensitiveHash < Hash
   end
 
   def replace other
-    detect_clash other, underscore?
+    # TODO
+    # What is the correct behavior of replace when the other hash is not an InsensitiveHash?
+    # underscore property precedence: other => self (FIXME)
+    us = other.respond_to?(:underscore?) ? other.underscore? : self.underscore?
+    detect_clash other, us
+
+    self.default      = other.default
+    self.default_proc = other.default_proc if other.default_proc
+    self.underscore   = us
 
     clear
     other.each do |k, v|

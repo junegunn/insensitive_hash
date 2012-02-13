@@ -134,6 +134,18 @@ class TestInsensitiveHash < Test::Unit::TestCase
       assert_nil ih[:hello_world]
       assert_nil ih.send(method, :b => 2)[:hello_world]
 
+      ih.default = 10
+      assert_equal 10, ih.send(method, :b => 2)[:anything]
+
+      ih.default = nil
+      assert_nil ih.send(method, :b => 2)[:anything]
+
+      ih.default_proc = proc { |h, k| h[k] = :default }
+      mh = ih.send(method, :b => 2)
+      assert       !mh.has_key?(:anything)
+      assert_equal :default, mh[:anything]
+      assert        mh.has_key?(:anything)
+
       ih2.delete 'b'
       assert ih2.has_key?('B') == false
     end
@@ -314,14 +326,40 @@ class TestInsensitiveHash < Test::Unit::TestCase
     assert !h.has_key?('A')
     assert h.has_key?('B')
 
-    h = InsensitiveHash.new
-    h.replace({ 'hello world' => 1, :hello_world => 2 })
+    # Default value
+    h.replace(Hash.new(5))
+    assert_equal 5, h[:anything]
+    assert_equal [], h.keys
+
+    # Default proc
+    h.replace(Hash.new { |h, k| h[k] = :default })
+    assert_equal :default, h[:anything]
+    assert_equal [:anything], h.keys
+
+    # underscore property of self
+    assert !h.underscore?
+    h.replace(InsensitiveHash['hello world' => 1].tap { |ih| ih.underscore = true })
+    assert h.underscore?
+    assert_equal 1, h[:hello_world]
 
     h = InsensitiveHash.new
-    h.underscore = true
     assert_raise(InsensitiveHash::KeyClashError) {
-      h.replace({ 'hello world' => 1, :hello_world => 2 })
+      h.replace({ 'a' => 1, :A => 2 })
     }
+
+    # TODO: FIXME
+    # underscore property of other
+    h = InsensitiveHash.new
+    oh = InsensitiveHash[ 'hello world' => 1 ]
+    oh.underscore = true
+    assert !h.underscore?
+    h.replace(oh)
+    assert h.underscore?
+
+    oh.underscore = false
+    oh[:hello_world => 2]
+    h.replace(oh)
+    assert !h.underscore?
   end
 
   def test_rassoc

@@ -1,6 +1,8 @@
 ### 0.2.2 / 2012/02/13
 * :underscore option added
 * `Insensitive::KeyClashError` added for safer operations
+* Bug fix: Preserve default/default_proc on merge/replace
+* Subtle behavioral change in Insensitive#replace when sent with an ordinary Hash
 
 ### 0.2.1 / 2012/02/10
 * Bug fix: Insensitive `fetch`
