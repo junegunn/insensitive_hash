@@ -74,6 +74,32 @@ class TestInsensitiveHash < Test::Unit::TestCase
       end
     end
 
+    # InsensitiveHash#insensitive
+    ihash1 = hash.insensitive
+    ihash1.default = :default
+    ihash1.underscore = true
+    ihash2 = ihash1.insensitive.insensitive.insensitive
+
+    assert_equal InsensitiveHash, ihash2.class
+    assert_equal :default, ihash2.default
+    assert_equal true,     ihash2.underscore?
+
+    # Preserving default
+    [:default, nil].each do |d|
+      hash.default = d
+      assert_equal d, hash.insensitive.insensitive.insensitive[:anything]
+    end
+
+    # Preserving default_proc
+    hash2 = {}
+    hash2.replace hash
+    hash2.default_proc = proc { |h, k| h[k] = :default }
+
+    ihash2 = hash2.insensitive.insensitive.insensitive
+    assert !ihash2.has_key?(:anything)
+    assert_equal :default, ihash2[:anything]
+    assert ihash2.has_key?(:anything)
+
     # FIXME: test insensitive call with encoder
     h = InsensitiveHash[{'Key with spaces' => 1}]
     h2 = h.insensitive :underscore => true

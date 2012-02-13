@@ -3,8 +3,9 @@ require 'insensitive_hash/insensitive_hash'
 
 class Hash
   # @return [InsensitiveHash]
-  def insensitive options = { :underscore => false }
-    InsensitiveHash[ self ].tap do |ih|
+  def insensitive options = {}
+    InsensitiveHash.new.tap do |ih|
+      ih.replace self
       ih.underscore = options[:underscore] if options.has_key?(:underscore)
     end
   end
