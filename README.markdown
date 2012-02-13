@@ -82,7 +82,7 @@ ih[:a_key_with_spaces]  # true
 # Or,
 ih = InsensitiveHash[ h ]
 ih.underscore = true
-ih.underscore?  # true
+ih.underscore?          # true
 ih[:a_key_with_spaces]  # true
 ```
 
