@@ -1,3 +1,6 @@
+### 0.2.3 / 2012/02/18
+* Key-clash detection made optional with `Insensitive#safe=`
+
 ### 0.2.2 / 2012/02/13
 * :underscore option added
 * `Insensitive::KeyClashError` added for safer operations

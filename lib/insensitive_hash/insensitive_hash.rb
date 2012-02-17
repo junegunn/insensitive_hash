@@ -11,6 +11,7 @@ class InsensitiveHash < Hash
 
     @key_map    = {}
     @underscore = false
+    @safe       = false
   end
 
   # Sets whether to replace spaces in String keys to underscores
@@ -34,6 +35,19 @@ class InsensitiveHash < Hash
   # @return [Boolean] Whether to replace spaces in String keys to underscores
   def underscore?
     @underscore
+  end
+
+  # Sets whether to detect key clashes
+  # @param [Boolean] 
+  # @return [Boolean]
+  def safe= s
+    raise ArgumentError.new("Not true or false") unless [true, false].include?(s)
+    @safe = s
+  end
+
+  # @return [Boolean] Key-clash detection enabled?
+  def safe?
+    @safe
   end
   
   # Returns a normal, sensitive Hash
@@ -99,11 +113,11 @@ class InsensitiveHash < Hash
     # What is the correct behavior of replace when the other hash is not an InsensitiveHash?
     # underscore property precedence: other => self (FIXME)
     us = other.respond_to?(:underscore?) ? other.underscore? : self.underscore?
-    detect_clash other, us
 
     self.default      = other.default
     self.default_proc = other.default_proc if other.default_proc
     self.underscore   = us
+    self.safe         = other.safe?        if other.respond_to?(:safe?)
 
     clear
     other.each do |k, v|
@@ -166,7 +180,7 @@ private
   def detect_clash hash, us
     hash.keys.map { |k| encode k, us }.tap { |ekeys|
       raise KeyClashError.new("Key clash detected") if ekeys != ekeys.uniq
-    }
+    } if @safe
   end
 end
 

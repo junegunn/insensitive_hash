@@ -191,13 +191,41 @@ class TestInsensitiveHash < Test::Unit::TestCase
     end
   end
 
+  def test_merge_clash_overwritten
+    ih = InsensitiveHash.new
+
+    ih = ih.merge(:a => 1, :A =>2)
+    assert_equal 2, ih.values.first
+    assert_equal 2, ih['A']
+    assert_equal 1, ih.length
+
+    ih = InsensitiveHash.new
+    ih.underscore = true
+    ih.merge!(:hello_world => 1, 'hello world' =>2)
+    assert_equal 2, ih.values.first
+    assert_equal 2, ih[:Hello_World]
+    assert_equal 1, ih.length
+  end
+
   def test_merge_clash
     ih = InsensitiveHash.new
     ih2 = InsensitiveHash.new
     ih2.underscore = true
 
+    sih = InsensitiveHash.new
+    sih.safe = true
+    sih2 = InsensitiveHash.new
+    sih2.safe = true
+    sih2.underscore = true
+
     [:merge, :merge!, :update, :update!].each do |method|
+      # No problem
       [ih, ih2].each do |h|
+        h.send(method, { :a => 1, :A => 1, 'A' => 1})
+        h.send(method, { 'a' => 1, 'A' => 1 })
+      end
+
+      [sih, sih2].each do |h|
         assert_raise(InsensitiveHash::KeyClashError) {
           h.send(method, { :a => 1, :A => 1, 'A' => 1})
         }
@@ -206,14 +234,16 @@ class TestInsensitiveHash < Test::Unit::TestCase
         }
       end
 
-      ih.send(method, { :hello_world => 1, 'hello world' => 2})
+      sih.send(method, { :hello_world => 1, 'hello world' => 2})
       assert_raise(InsensitiveHash::KeyClashError) {
-        ih2.send(method, { :hello_world => 1, 'hello world' => 2})
+        sih2.send(method, { :hello_world => 1, 'hello world' => 2})
       }
+      ih2.send(method, { :hello_world => 1, 'hello world' => 2})
     end
 
+    ih.merge({ :a => 1, :A => 1, 'A' => 1})
     assert_raise(InsensitiveHash::KeyClashError) {
-      ih.merge({ :a => 1, :A => 1, 'A' => 1})
+      sih.merge({ :a => 1, :A => 1, 'A' => 1})
     }
   end
 
@@ -368,11 +398,6 @@ class TestInsensitiveHash < Test::Unit::TestCase
     assert h.underscore?
     assert_equal 1, h[:hello_world]
 
-    h = InsensitiveHash.new
-    assert_raise(InsensitiveHash::KeyClashError) {
-      h.replace({ 'a' => 1, :A => 2 })
-    }
-
     # TODO: FIXME
     # underscore property of other
     h = InsensitiveHash.new
@@ -506,6 +531,8 @@ class TestInsensitiveHash < Test::Unit::TestCase
 
   def test_underscore_clash
     h = InsensitiveHash.new
+    h.safe = true
+
     h['hello world'] = 1
     h['HELLO_world'] = 2
     assert_equal 1, h['HELLO WORLD']
