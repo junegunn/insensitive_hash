@@ -6,6 +6,20 @@ $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
 require 'insensitive_hash/minimal'
 
 class TestInsensitiveHash < Test::Unit::TestCase
+  def eight?
+    RUBY_VERSION =~ /^1\.8\./
+  end
+
+  def assert_keys set1, set2
+    if eight?
+      assert_equal set1.sort { |a, b| a.to_s <=> b.to_s },
+        set2.sort { |a, b| a.to_s <=> b.to_s }
+    else
+      assert_equal set1, set2
+    end
+
+  end
+
   def test_has_key_set
     ih = InsensitiveHash.new
     ih['a'] = 1
@@ -19,12 +33,11 @@ class TestInsensitiveHash < Test::Unit::TestCase
       assert_equal 2, ih[a]
     end
 
-    assert_equal ['A'], ih.keys
+    assert_keys  ['A'], ih.keys
     assert_equal [2], ih.values
 
     ih[:A] = 4
-    assert_equal ih.keys, [:A]
-    assert_equal [:A], ih.keys
+    assert_keys  [:A], ih.keys
     assert_equal [4], ih.values
 
     ih[:b] = { :c => 5 }
@@ -91,14 +104,16 @@ class TestInsensitiveHash < Test::Unit::TestCase
     end
 
     # Preserving default_proc
-    hash2 = {}
-    hash2.replace hash
-    hash2.default_proc = proc { |h, k| h[k] = :default }
+    unless eight?
+      hash2 = {}
+      hash2.replace hash
+      hash2.default_proc = proc { |h, k| h[k] = :default }
 
-    ihash2 = hash2.insensitive.insensitive.insensitive
-    assert !ihash2.has_key?(:anything)
-    assert_equal :default, ihash2[:anything]
-    assert ihash2.has_key?(:anything)
+      ihash2 = hash2.insensitive.insensitive.insensitive
+      assert !ihash2.has_key?(:anything)
+      assert_equal :default, ihash2[:anything]
+      assert ihash2.has_key?(:anything)
+    end
 
     # FIXME: test insensitive call with encoder
     h = InsensitiveHash[{'Key with spaces' => 1}]
@@ -145,8 +160,8 @@ class TestInsensitiveHash < Test::Unit::TestCase
       ih = InsensitiveHash[:a => 1, 'hello world' => 2]
       ih2 = ih.send(method, :b => 2)
 
-      assert_equal [:a, 'hello world'], ih.keys
-      assert_equal [:a, 'hello world', :b], ih2.keys
+      assert_keys [:a, 'hello world'], ih.keys
+      assert_keys [:a, 'hello world', :b], ih2.keys
       assert ih2.has_key?('B'), 'correctly merged another hash'
 
       assert_nil ih[:hello_world]
@@ -166,11 +181,13 @@ class TestInsensitiveHash < Test::Unit::TestCase
       ih.default = nil
       assert_nil ih.send(method, :b => 2)[:anything]
 
-      ih.default_proc = proc { |h, k| h[k] = :default }
-      mh = ih.send(method, :b => 2)
-      assert       !mh.has_key?(:anything)
-      assert_equal :default, mh[:anything]
-      assert        mh.has_key?(:anything)
+      unless eight?
+        ih.default_proc = proc { |h, k| h[k] = :default }
+        mh = ih.send(method, :b => 2)
+        assert       !mh.has_key?(:anything)
+        assert_equal :default, mh[:anything]
+        assert        mh.has_key?(:anything)
+      end
 
       ih2.delete 'b'
       assert ih2.has_key?('B') == false
@@ -182,8 +199,8 @@ class TestInsensitiveHash < Test::Unit::TestCase
       ih = InsensitiveHash[:a => 1]
       ih2 = ih.send(method, :b => 2)
 
-      assert_equal [:a, :b], ih.keys
-      assert_equal [:a, :b], ih2.keys
+      assert_keys [:a, :b], ih.keys
+      assert_keys [:a, :b], ih2.keys
       assert ih2.has_key?('B'), 'correctly merged another hash'
 
       ih2.delete 'b'
@@ -195,15 +212,20 @@ class TestInsensitiveHash < Test::Unit::TestCase
     ih = InsensitiveHash.new
 
     ih = ih.merge(:a => 1, :A =>2)
-    assert_equal 2, ih.values.first
-    assert_equal 2, ih['A']
+    # No guarantee in order in 1.8
+    unless eight?
+      assert_equal 2, ih.values.first
+      assert_equal 2, ih['A']
+    end
     assert_equal 1, ih.length
 
     ih = InsensitiveHash.new
     ih.underscore = true
     ih.merge!(:hello_world => 1, 'hello world' =>2)
-    assert_equal 2, ih.values.first
-    assert_equal 2, ih[:Hello_World]
+    unless eight?
+      assert_equal 2, ih.values.first
+      assert_equal 2, ih[:Hello_World]
+    end
     assert_equal 1, ih.length
   end
 
@@ -248,6 +270,8 @@ class TestInsensitiveHash < Test::Unit::TestCase
   end
 
   def test_assoc
+    pend "1.8" if eight?
+
     h = InsensitiveHash[{
       "colors"  => ["red", "blue", "green"],
       :Letters => ["a", "b", "c" ]
@@ -338,7 +362,7 @@ class TestInsensitiveHash < Test::Unit::TestCase
     # FIXME: Test passes, but key_map not updated
     h = InsensitiveHash[ :a => 100, :tmp_a => 200, :c => 300 ]
     h.delete_if.each { |k, v| k == :tmp_a }
-    assert_equal [:a, :c], h.keys
+    assert_keys [:a, :c], h.keys
   end
 
   def test_has_key_after_delete
@@ -346,7 +370,7 @@ class TestInsensitiveHash < Test::Unit::TestCase
     h = InsensitiveHash[ :a => 1, :b => 2 ]
     
     set.each { |s| assert h.has_key?(s) }
-    h.delete_if { |e| true }
+    h.delete_if { |k, v| true }
     set.each { |s| assert !h.has_key?(s) }
   end
 
@@ -414,6 +438,8 @@ class TestInsensitiveHash < Test::Unit::TestCase
   end
 
   def test_rassoc
+    pend "1.8" if eight?
+
     a = InsensitiveHash[{1=> "one", 2 => "two", 3 => "three", "ii" => "two"}]
     assert_equal [2, "two"], a.rassoc("two")
     assert_nil a.rassoc("four")
@@ -439,7 +465,7 @@ class TestInsensitiveHash < Test::Unit::TestCase
     end
     assert_equal 3, h.fetch(:c, 3)
     assert_equal 3, h.fetch(:c) { 3 }
-    assert_raise(KeyError) { h.fetch('D') }
+    assert_raise(eight? ? IndexError : KeyError) { h.fetch('D') }
   end
 
   def test_underscore
@@ -555,7 +581,7 @@ class TestInsensitiveHash < Test::Unit::TestCase
     h.underscore = false
     h['hello world'] = 2
 
-    assert_equal [:hello_world, 'hello world'], h.keys
+    assert_keys  [:hello_world, 'hello world'], h.keys
     assert_equal 2, h['Hello World']
   end
 end

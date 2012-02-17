@@ -109,19 +109,18 @@ class InsensitiveHash < Hash
   end
 
   def replace other
+    super other
+
     # TODO
     # What is the correct behavior of replace when the other hash is not an InsensitiveHash?
     # underscore property precedence: other => self (FIXME)
-    us = other.respond_to?(:underscore?) ? other.underscore? : self.underscore?
+    self.underscore = other.respond_to?(:underscore?) ? other.underscore? : self.underscore?
+    self.safe       = other.safe? if other.respond_to?(:safe?)
 
-    self.default      = other.default
-    self.default_proc = other.default_proc if other.default_proc
-    self.underscore   = us
-    self.safe         = other.safe?        if other.respond_to?(:safe?)
-
-    clear
-    other.each do |k, v|
-      self[k] = v
+    @key_map.clear
+    self.each do |k, v|
+      ekey = encode k, @underscore
+      @key_map[ekey] = k
     end
   end
 

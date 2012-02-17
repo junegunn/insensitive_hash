@@ -1,5 +1,6 @@
 ### 0.2.3 / 2012/02/18
 * Key-clash detection made optional with `Insensitive#safe=`
+* Ruby 1.8 compatibility
 
 ### 0.2.2 / 2012/02/13
 * :underscore option added
