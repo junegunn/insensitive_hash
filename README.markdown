@@ -86,6 +86,21 @@ ih.underscore?          # true
 ih[:a_key_with_spaces]  # true
 ```
 
+### Enabling key-clash detection
+```ruby
+h = {}.insensitive :underscore => true
+h.safe = true
+h.safe?           # true
+
+# Will raise InsensitiveHash::KeyClashError
+h.merge!('hello world' => 1, :hello_world => 2)
+
+# Disables key-clash detection again
+h.safe = false
+h.merge!('hello world' => 1, :hello_world => 2)
+h['Hello World']  # 2
+```
+
 ## Contributing to insensitive_hash
  
 * Check out the latest master to make sure the feature hasn't been implemented or the bug hasn't been fixed yet
