@@ -4,9 +4,9 @@
 
 ### 0.2.2 / 2012/02/13
 * :underscore option added
-* `Insensitive::KeyClashError` added for safer operations
+* `InsensitiveHash::KeyClashError` added for safer operations
 * Bug fix: Preserve default/default_proc on merge/replace/insensitive
-* Subtle behavioral change in `Insensitive#replace` when called with an ordinary Hash
+* Subtle behavioral change in `InsensitiveHash#replace` when called with an ordinary Hash
 
 ### 0.2.1 / 2012/02/10
 * Bug fix: Insensitive `fetch`
