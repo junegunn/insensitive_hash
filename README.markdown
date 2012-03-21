@@ -27,6 +27,7 @@ h = ih.sensitive
 h = ih.to_hash
 ```
 
+### Opt-out monkey-patching
 If you don't like to have Hash#insensitive method, `require 'insensitive_hash/minimal'`
 
 ### Basic usage
@@ -76,26 +77,24 @@ db[:production][:adapter]
 ```ruby
 h = { 'A key with spaces' => true }
 
-ih = h.insensitive :underscore => true
+ih = h.insensitive(:underscore => true)
 ih[:a_key_with_spaces]  # true
 
-# Or,
-ih = InsensitiveHash[ h ]
-ih.underscore = true
+# Or without Hash#insensitive,
+ih = InsensitiveHash[ h ].tap { |ih| ih.underscore = true }
 ih.underscore?          # true
 ih[:a_key_with_spaces]  # true
 ```
 
 ### Enabling key-clash detection
 ```ruby
-h = {}.insensitive :underscore => true
-h.safe = true
-h.safe?           # true
+ih = InsensitiveHash.new.tap { |ih| ih.safe = true }
+ih.safe?           # true
 
 # Will raise InsensitiveHash::KeyClashError
 h.merge!('hello world' => 1, :hello_world => 2)
 
-# Disables key-clash detection again
+# Disables key-clash detection
 h.safe = false
 h.merge!('hello world' => 1, :hello_world => 2)
 h['Hello World']  # 2
@@ -113,6 +112,6 @@ h['Hello World']  # 2
 
 ## Copyright
 
-Copyright (c) 2011 Junegunn Choi. See LICENSE.txt for
+Copyright (c) 2012 Junegunn Choi. See LICENSE.txt for
 further details.
 

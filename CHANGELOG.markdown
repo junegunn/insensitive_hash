@@ -1,3 +1,6 @@
+### 0.2.4
+* :safe setting from Hash#insensitive
+
 ### 0.2.3 / 2012/02/18
 * Key-clash detection made optional with `InsensitiveHash#safe=`
 * Ruby 1.8 compatibility
