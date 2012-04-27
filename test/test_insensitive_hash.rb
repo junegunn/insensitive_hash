@@ -17,7 +17,6 @@ class TestInsensitiveHash < Test::Unit::TestCase
     else
       assert_equal set1, set2
     end
-
   end
 
   def test_has_key_set
@@ -563,7 +562,7 @@ class TestInsensitiveHash < Test::Unit::TestCase
     h['HELLO_world'] = 2
     assert_equal 1, h['HELLO WORLD']
     assert_equal 2, h['HELLO_WORLD']
-    assert_equal ['hello world', 'HELLO_world'], h.keys
+    assert_equal ['hello world', 'HELLO_world'], h.keys unless eight? # Not order-preserving
 
     assert_raise(InsensitiveHash::KeyClashError) { h.underscore = true }
     h.delete('hello world')
@@ -583,6 +582,19 @@ class TestInsensitiveHash < Test::Unit::TestCase
 
     assert_keys  [:hello_world, 'hello world'], h.keys
     assert_equal 2, h['Hello World']
+  end
+
+  def test_constructor_default
+    h = InsensitiveHash.new :default
+    assert_equal :default, h[:xxx]
+
+    h = InsensitiveHash.new { :default_from_block }
+    assert_equal :default_from_block, h[:xxx]
+
+    # But not both!
+    assert_raise(ArgumentError) {
+      InsensitiveHash.new(:default) { :default_from_block }
+    }
   end
 end
 

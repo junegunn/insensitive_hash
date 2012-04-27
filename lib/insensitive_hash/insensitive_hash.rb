@@ -4,6 +4,7 @@ class InsensitiveHash < Hash
 
   def initialize default = nil, &block
     if block_given?
+      raise ArgumentError.new('wrong number of arguments') unless default.nil?
       super &block
     else
       super

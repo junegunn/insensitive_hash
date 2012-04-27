@@ -12,23 +12,40 @@ Examples
 --------
 
 ### Instantiation
+
 ```ruby
 require 'insensitive_hash'
 
-# Monkey-patched Hash#insensitive method
-ih = {'abc' => 1, :def => 2}.insensitive
+ih = {}.insensitive
+ih = { 'abc' => 1, :def => 2 }.insensitive
+ih = { 'hello world' => true }.insensitive(:underscore => true)
+  # :underscore option allows ih[:hello_world]
+```
 
-# Or,
-ih = InsensitiveHash[ :abc => 1, 'DEF' => 2 ]
-ih = InsensitiveHash[ :abc, 1, 'DEF', 2 ]
+### Instantiation without monkey-patching Hash
 
-# Revert to normal Hash
+If you don't like to have Hash#insensitive method, `require 'insensitive_hash/minimal'`
+
+```ruby
+require 'insensitive_hash/minimal'
+
+ih = InsensitiveHash.new
+ih = InsensitiveHash.new(:default_value)
+ih = InsensitiveHash.new { |h, k| :default_value_from_block }
+
+ih = InsensitiveHash[ 'abc' => 1, :def => 2 ]
+ih = InsensitiveHash[ 'abc', 1, :def, 2 ]
+ih = InsensitiveHash[ [['abc', 1], [:def, 2]] ]
+
+ih = InsensitiveHash[ 'hello world' => true ].tap { |ih| ih.underscore = true }
+```
+
+### Revert to normal Hash
+
+```ruby
 h = ih.sensitive
 h = ih.to_hash
 ```
-
-### Opt-out monkey-patching
-If you don't like to have Hash#insensitive method, `require 'insensitive_hash/minimal'`
 
 ### Basic usage
 ```ruby
