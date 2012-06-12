@@ -141,6 +141,19 @@ class TestInsensitiveHash < Test::Unit::TestCase
     ih.underscore = true
     assert ih[:a_key_with_spaces]
     assert ih.underscore?
+
+    # :safe
+    ih = {}.insensitive
+    assert_raise(ArgumentError) {
+      ihs = {'a' => 1}.insensitive(:safe => 1)
+    }
+    ihs = {'a' => 1}.insensitive(:safe => true)
+    assert !ih.safe?
+    assert ihs.safe?
+
+    assert_raise(InsensitiveHash::KeyClashError) {
+      ihs.merge(:a => 2, 'A' => 3)
+    }
   end
 
   def test_delete
@@ -595,6 +608,23 @@ class TestInsensitiveHash < Test::Unit::TestCase
     assert_raise(ArgumentError) {
       InsensitiveHash.new(:default) { :default_from_block }
     }
+  end
+
+  def test_dup_clone
+    a = InsensitiveHash.new
+    a[:key] = :value
+
+    b = a.dup
+    b.delete 'key'
+    assert_nil b[:key]
+
+    assert_equal :value, a[:key]
+
+    c = a.clone
+    c.delete 'KEY'
+    assert_nil c[:key]
+
+    assert_equal :value, a[:key]
   end
 end
 

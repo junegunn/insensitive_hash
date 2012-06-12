@@ -42,7 +42,7 @@ class InsensitiveHash < Hash
   # @param [Boolean] 
   # @return [Boolean]
   def safe= s
-    raise ArgumentError.new("Not true or false") unless [true, false].include?(s)
+    raise ArgumentError.new("Neither true nor false") unless [true, false].include?(s)
     @safe = s
   end
 
@@ -138,6 +138,18 @@ class InsensitiveHash < Hash
   def fetch *args, &block
     args[0] = lookup_key(args[0]) if args.first
     super *args, &block
+  end
+
+  def dup
+    super.tap { |copy|
+      copy.instance_variable_set :@key_map, @key_map.dup
+    }
+  end
+
+  def clone
+    super.tap { |copy|
+      copy.instance_variable_set :@key_map, @key_map.dup
+    }
   end
 
 private
