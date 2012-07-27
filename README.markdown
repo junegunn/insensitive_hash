@@ -71,19 +71,20 @@ ih.keys            # ['DEF']
 
 ### "Inherited insensitivity"
 ```ruby
-# Hash values are recursively converted to be insensitive
+# When InsensitiveHash is built from another Hash,
+# descendant Hash values are recursively converted to be insensitive
 # (Useful when processing YAML inputs)
-ih = InsensitiveHash.new
-ih['kids'] = { :hello => [ { :world => '!!!' } ] }
+
+ih = { 'kids' => { :hello => [ { :world => '!!!' } ] } }.insensitive
 ih[:kids]['Hello'].first['WORLD']  # !!!
 
-ih['one'] = [ [ [ { :a => { :b => { :c => 'd' } } } ] ] ]
+ih = InsensitiveHash[ {:one => [ [ [ { :a => { :b => { :c => 'd' } } } ] ] ]} ]
 ih['one'].first.first.first['A']['b'][:C]  # 'd'
 ```
 
 ### Processing case-insensitive YAML input
 ```ruby
-db = YAML.load(File.read 'database.yml').insensitive
+db = YAML.load(File.read 'database.yml').insensitive(:underscore => true)
 
 # Access values however you like
 db['Development']['ADAPTER']

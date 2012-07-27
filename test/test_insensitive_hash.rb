@@ -44,18 +44,27 @@ class TestInsensitiveHash < Test::Unit::TestCase
     assert          ih.keys.include?(:b)
     assert_equal 2, ih.keys.length
     assert_equal({ :c => 5 }, ih['B'])
-    assert_equal 5, ih['B']['C']
+    assert_equal 5, ih['B'][:c]
+    assert_equal nil, ih['B']['C']
 
     ih['c'] = [ { 'x' => 1 }, { :y => 2 } ]
     assert       ih.keys.include?('c')
     assert_equal 3, ih.keys.length
+
+    assert_equal nil, ih[:c].first[:x]
+    assert_equal nil, ih[:c].last['Y']
+
+    ih = ih.insensitive
     assert_equal 1, ih[:c].first[:x]
     assert_equal 2, ih[:c].last['Y']
 
     # Deeeeeper nesting
     ih['c'] = [ [ [ { 'x' => 1 }, { :y => 2 } ] ] ]
+    assert_equal nil, ih[:c].first.first.last[:Y]
+    ih = ih.insensitive
     assert_equal 2, ih[:c].first.first.last[:Y]
-    ih['c'] = { 'a' => { 'a' => { 'a' => 100 } } }
+
+    ih['c'] = { 'a' => { 'a' => { 'a' => 100 } } }.insensitive
     assert_equal 100, ih[:C][:a][:A]['A']
 
     ih[5] = 50
@@ -85,6 +94,13 @@ class TestInsensitiveHash < Test::Unit::TestCase
         end
       end
     end
+
+    # Changelog 0.3.0
+    ih = {}.insensitive
+    ih[:a] = { :b => :c }
+    assert_nil ih[:a]['B']
+    ih2 = ih.insensitive
+    assert_equal :c, ih2[:a]['B']
 
     # InsensitiveHash#insensitive
     ihash1 = hash.insensitive
@@ -368,6 +384,30 @@ class TestInsensitiveHash < Test::Unit::TestCase
     assert_equal nil, h.default
     assert_equal nil, h.default(:wrong)
     assert_equal :ok, h.default(:right)
+  end
+
+  def test_default_proc_patch
+    h = InsensitiveHash.new { |h, k| k }
+    assert_equal 1, h[1]
+    assert_equal 2, h[2]
+
+    h = InsensitiveHash.new { |h, k| h[k] = [] }
+    h[:abc] << 1
+    h[:abc] << 2
+    h[:abc] << 3
+    assert_equal [1, 2, 3], h[:abc]
+
+    h = InsensitiveHash.new { |h, k| h[k] = {} }
+    h[:abc][:def] = 1
+    h[:abc][:ghi] = { :xyz => true }
+    assert_equal 1, h[:abc][:def]
+    assert_equal true, h[:abc][:ghi][:xyz]
+    assert_equal nil, h[:abc][:ghi][:XYZ] # This shouldn't work anymore from 0.3.0
+
+    h = InsensitiveHash.new
+    h[:abc] = arr = [1, 2, 3]
+    arr << 4
+    assert_equal [1, 2, 3, 4], h[:ABC]
   end
 
   def test_delete_if

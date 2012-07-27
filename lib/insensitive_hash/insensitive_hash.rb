@@ -27,7 +27,7 @@ class InsensitiveHash < Hash
     @underscore = us
     @key_map    = {}
     self.keys.each do |k|
-      self[k] = self.delete(k)
+      deep_set k, delete(k)
     end
 
     us
@@ -62,7 +62,7 @@ class InsensitiveHash < Hash
     h = Hash[*init]
     InsensitiveHash.new.tap do |ih|
       h.each do |key, value|
-        ih[key] = value
+        ih.send :deep_set, key, value
       end
     end
   end
@@ -79,14 +79,14 @@ class InsensitiveHash < Hash
     delete key
     ekey = encode key, @underscore
     @key_map[ekey] = key
-    super key, wrap(value, underscore?)
+    super key, value
   end
   alias store []=
 
   def merge! other_hash
     detect_clash other_hash, underscore?
     other_hash.each do |key, value|
-      self[key] = value
+      deep_set key, value
     end
     self
   end
@@ -153,6 +153,10 @@ class InsensitiveHash < Hash
   end
 
 private
+  def deep_set key, value
+    self[key] = wrap(value, underscore?)
+  end
+
   def wrap value, us
     case value
     when InsensitiveHash

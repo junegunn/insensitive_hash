@@ -1,3 +1,21 @@
+### 0.3.0
+* "Inherited insensitivity" had been a great source of confusion,
+  as it stores transformed version of the given Array of Hash.
+  From 0.3.0, Hash values and descendant Hashes are converted to be insensitive
+  only on the initialization of InsensitiveHash or on `underscore=` call.
+  Refer to the following code
+
+  ```ruby
+    ih = {}.insensitive
+    ih[:a] = { :b => :c }
+
+    ih[:a]['B']           # nil
+
+    # Initialize another InsensitiveHash
+    ih2 = ih.insensitive
+    ih2[:a]['B']           # :c
+  ```
+
 ### 0.2.4
 * Bug fix: Invalid `dup`, `clone` behavior
 * :safe setting from `Hash#insensitive`
