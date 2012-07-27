@@ -17,9 +17,11 @@ Examples
 require 'insensitive_hash'
 
 ih = {}.insensitive
-ih = { 'abc' => 1, :def => 2 }.insensitive
-ih = { 'hello world' => true }.insensitive(:underscore => true)
-  # :underscore option allows ih[:hello_world]
+
+ih = { :abc => 1, 'hello world' => true }.insensitive
+
+ih['ABC']         # 1
+ih[:Hello_World]  # true
 ```
 
 ### Instantiation without monkey-patching Hash
@@ -37,7 +39,7 @@ ih = InsensitiveHash[ 'abc' => 1, :def => 2 ]
 ih = InsensitiveHash[ 'abc', 1, :def, 2 ]
 ih = InsensitiveHash[ [['abc', 1], [:def, 2]] ]
 
-ih = InsensitiveHash[ 'hello world' => true ].tap { |ih| ih.underscore = true }
+ih = InsensitiveHash[ 'hello world' => true ]
 ```
 
 ### Revert to normal Hash
@@ -84,24 +86,11 @@ ih['one'].first.first.first['A']['b'][:C]  # 'd'
 
 ### Processing case-insensitive YAML input
 ```ruby
-db = YAML.load(File.read 'database.yml').insensitive(:underscore => true)
+db = YAML.load(File.read 'database.yml').insensitive
 
 # Access values however you like
 db['Development']['ADAPTER']
 db[:production][:adapter]
-```
-
-### Replacing spaces in String keys to underscores
-```ruby
-h = { 'A key with spaces' => true }
-
-ih = h.insensitive(:underscore => true)
-ih[:a_key_with_spaces]  # true
-
-# Or without Hash#insensitive,
-ih = InsensitiveHash[ h ].tap { |ih| ih.underscore = true }
-ih.underscore?          # true
-ih[:a_key_with_spaces]  # true
 ```
 
 ### Enabling key-clash detection

@@ -4,17 +4,19 @@
   From 0.3.0, Hash values and descendant Hashes are converted to be insensitive
   only on the initialization of InsensitiveHash or on `underscore=` call.
   Refer to the following code
+* Now allowing underscores for spaces is by default on, and cannot be turned off.
 
-  ```ruby
-    ih = {}.insensitive
-    ih[:a] = { :b => :c }
+```ruby
+  ih = {}.insensitive
+  ih[:a] = { :b => :c }
 
-    ih[:a]['B']           # nil
+  ih[:a]['B']           # nil
 
-    # Initialize another InsensitiveHash
-    ih2 = ih.insensitive
-    ih2[:a]['B']           # :c
-  ```
+  # Initialize another InsensitiveHash
+  ih2 = ih.insensitive
+  ih2[:a]['B']           # :c
+```
+* `:underscore` option is on by default
 
 ### 0.2.4
 * Bug fix: Invalid `dup`, `clone` behavior

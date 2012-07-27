@@ -11,31 +11,7 @@ class InsensitiveHash < Hash
     end
 
     @key_map    = {}
-    @underscore = false
     @safe       = false
-  end
-
-  # Sets whether to replace spaces in String keys to underscores
-  # @param [Boolean] us
-  # @return [Boolean]
-  def underscore= us
-    raise ArgumentError.new("Not true or false") unless [true, false].include?(us)
-
-    # Check key clash
-    detect_clash self, us
-
-    @underscore = us
-    @key_map    = {}
-    self.keys.each do |k|
-      deep_set k, delete(k)
-    end
-
-    us
-  end
-
-  # @return [Boolean] Whether to replace spaces in String keys to underscores
-  def underscore?
-    @underscore
   end
 
   # Sets whether to detect key clashes
@@ -61,9 +37,7 @@ class InsensitiveHash < Hash
   def self.[] *init
     h = Hash[*init]
     InsensitiveHash.new.tap do |ih|
-      h.each do |key, value|
-        ih.send :deep_set, key, value
-      end
+      ih.merge! h
     end
   end
 
@@ -77,14 +51,14 @@ class InsensitiveHash < Hash
 
   def []= key, value
     delete key
-    ekey = encode key, @underscore
+    ekey = encode key
     @key_map[ekey] = key
     super key, value
   end
   alias store []=
 
   def merge! other_hash
-    detect_clash other_hash, underscore?
+    detect_clash other_hash
     other_hash.each do |key, value|
       deep_set key, value
     end
@@ -112,15 +86,11 @@ class InsensitiveHash < Hash
   def replace other
     super other
 
-    # TODO
-    # What is the correct behavior of replace when the other hash is not an InsensitiveHash?
-    # underscore property precedence: other => self (FIXME)
-    self.underscore = other.respond_to?(:underscore?) ? other.underscore? : self.underscore?
-    self.safe       = other.safe? if other.respond_to?(:safe?)
+    self.safe = other.respond_to?(:safe?) ? other.safe? : safe?
 
     @key_map.clear
     self.each do |k, v|
-      ekey = encode k, @underscore
+      ekey = encode k
       @key_map[ekey] = k
     end
   end
@@ -154,24 +124,25 @@ class InsensitiveHash < Hash
 
 private
   def deep_set key, value
-    self[key] = wrap(value, underscore?)
+    wv = wrap value
+    self[key] = wv
   end
 
-  def wrap value, us
+  def wrap value
     case value
     when InsensitiveHash
-      value.tap { |ih| ih.underscore = us || ih.underscore? }
+      value
     when Hash
-      InsensitiveHash[value].tap { |ih| ih.underscore = us }
+      InsensitiveHash[value]
     when Array
-      value.map { |v| wrap v, us }
+      value.map { |v| wrap v }
     else
       value
     end
   end
 
   def lookup_key key, delete = false
-    ekey = encode key, @underscore
+    ekey = encode key
     if @key_map.has_key?(ekey)
       delete ? @key_map.delete(ekey) : @key_map[ekey]
     else
@@ -179,22 +150,17 @@ private
     end
   end
 
-  def encode key, us
+  def encode key
     case key
     when String, Symbol
-      key = key.to_s.downcase
-      if us
-        key.gsub(' ', '_')
-      else
-        key
-      end
+      key.to_s.downcase.gsub(' ', '_')
     else
       key
     end
   end
 
-  def detect_clash hash, us
-    hash.keys.map { |k| encode k, us }.tap { |ekeys|
+  def detect_clash hash
+    hash.keys.map { |k| encode k }.tap { |ekeys|
       raise KeyClashError.new("Key clash detected") if ekeys != ekeys.uniq
     } if @safe
   end
