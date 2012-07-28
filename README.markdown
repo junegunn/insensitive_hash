@@ -33,7 +33,7 @@ require 'insensitive_hash/minimal'
 
 ih = InsensitiveHash.new
 ih = InsensitiveHash.new(:default_value)
-ih = InsensitiveHash.new { |h, k| :default_value_from_block }
+ih = InsensitiveHash.new { |ih, k| ih[k] = {}.insensitive }
 
 ih = InsensitiveHash[ 'abc' => 1, :def => 2 ]
 ih = InsensitiveHash[ 'abc', 1, :def, 2 ]
