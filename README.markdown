@@ -72,16 +72,31 @@ ih.keys            # ['DEF']
 ```
 
 ### "Inherited insensitivity"
+
+When InsensitiveHash is built from another Hash,
+descendant Hash values are recursively converted to be insensitive
+(Useful when processing YAML inputs)
+
 ```ruby
-# When InsensitiveHash is built from another Hash,
-# descendant Hash values are recursively converted to be insensitive
-# (Useful when processing YAML inputs)
 
 ih = { 'kids' => { :hello => [ { :world => '!!!' } ] } }.insensitive
 ih[:kids]['Hello'].first['WORLD']  # !!!
 
 ih = InsensitiveHash[ {:one => [ [ [ { :a => { :b => { :c => 'd' } } } ] ] ]} ]
 ih['one'].first.first.first['A']['b'][:C]  # 'd'
+```
+
+Once InsensitiveHash is initialized, you can convert its descendant Hash values by
+building a new InsensitiveHash from it.
+
+```ruby
+ih = {}.insensitive
+ih[:abc] = { :def => true }
+
+ih['ABC']['DEF']     # nil
+
+ih2 = ih.insensitive
+ih2['ABC']['DEF']     # true
 ```
 
 ### Processing case-insensitive YAML input
@@ -93,10 +108,10 @@ db['Development']['ADAPTER']
 db[:production][:adapter]
 ```
 
-### Enabling key-clash detection
+### Enabling key-clash detection (Safe mode)
 ```ruby
-ih = InsensitiveHash.new.tap { |ih| ih.safe = true }
-ih.safe?           # true
+ih = InsensitiveHash.new
+ih.safe = true
 
 # Will raise InsensitiveHash::KeyClashError
 h.merge!('hello world' => 1, :hello_world => 2)
