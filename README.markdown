@@ -33,7 +33,7 @@ require 'insensitive_hash/minimal'
 
 ih = InsensitiveHash.new
 ih = InsensitiveHash.new(:default_value)
-ih = InsensitiveHash.new { |ih, k| ih[k] = {}.insensitive }
+ih = InsensitiveHash.new { |ih, k| ih[k] = InsensitiveHash.new }
 
 ih = InsensitiveHash[ 'abc' => 1, :def => 2 ]
 ih = InsensitiveHash[ 'abc', 1, :def, 2 ]
@@ -96,7 +96,7 @@ ih[:abc] = { :def => true }
 ih['ABC']['DEF']     # nil
 
 ih2 = ih.insensitive
-ih2['ABC']['DEF']     # true
+ih2['ABC']['DEF']    # true
 ```
 
 ### Processing case-insensitive YAML input
