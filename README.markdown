@@ -51,7 +51,7 @@ h = ih.to_hash
 
 ### Basic usage
 ```ruby
-ih = InsensitiveHash[:abc => 1, 'DEF' => 2]
+ih = {:abc => 1, 'DEF' => 2}.insensitive
 
 # Case-insensitive, Symbol/String-indifferent access.
 ih['Abc']          # 1
@@ -82,7 +82,7 @@ descendant Hash values are recursively converted to be insensitive
 ih = { 'kids' => { :hello => [ { :world => '!!!' } ] } }.insensitive
 ih[:kids]['Hello'].first['WORLD']  # !!!
 
-ih = InsensitiveHash[ {:one => [ [ [ { :a => { :b => { :c => 'd' } } } ] ] ]} ]
+ih = {:one => [ [ [ { :a => { :b => { :c => 'd' } } } ] ] ]}.insensitive
 ih['one'].first.first.first['A']['b'][:C]  # 'd'
 ```
 
