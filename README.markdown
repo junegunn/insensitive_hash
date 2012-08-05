@@ -86,15 +86,19 @@ ih = {:one => [ [ [ { :a => { :b => { :c => 'd' } } } ] ] ]}.insensitive
 ih['one'].first.first.first['A']['b'][:C]  # 'd'
 ```
 
-Once InsensitiveHash is initialized, you can convert its descendant Hash values by
-building a new InsensitiveHash from it.
+However, once InsensitiveHash is initialized,
+descendant Hashes are not automatically converted.
 
 ```ruby
 ih = {}.insensitive
 ih[:abc] = { :def => true }
 
 ih['ABC']['DEF']     # nil
+```
 
+Simply build a new InsensitiveHash again if you need recursive conversion.
+
+```ruby
 ih2 = ih.insensitive
 ih2['ABC']['DEF']    # true
 ```
