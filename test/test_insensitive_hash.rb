@@ -528,5 +528,53 @@ class TestInsensitiveHash < Test::Unit::TestCase
 
     assert_equal :value, a[:key]
   end
+
+  def test_encoder
+    # With custom encoder
+    a = {}.insensitive(:encoder => prc = proc { |key| key.to_s.downcase })
+    a['1'] = 'one'
+    assert_equal 'one', a[1]
+    assert_equal prc, a.encoder
+
+    a['hello world'] = true
+    assert_equal true, a['HELLO WORLD']
+    assert_equal nil,  a[:HELLO_WORLD]
+
+    # Update encoder
+    a.encoder = proc { |key| key.to_s.gsub(' ', '_').downcase }
+    assert_equal true, a[:HELLO_WORLD]
+
+    # Update again
+    a.encoder = proc { |key| key.to_s }
+    assert_equal true, a[:"hello world"]
+    assert_equal nil, a['HELLO WORLD']
+    assert_equal nil, a[:hello_world]
+    assert_equal nil, a[:HELLO_WORLD]
+  end
+
+  def test_encoder_invalid_type
+    assert_raise(ArgumentError) {
+      {}.insensitive(:encoder => 1)
+    }
+    assert_raise(ArgumentError) {
+      h = InsensitiveHash.new
+      h.encoder = 1
+    }
+  end
+
+  def test_encoder_replace
+    a = {}.insensitive(:encoder => proc { |key| key })
+    b = {}.insensitive(:encoder => proc { |key| key.to_s })
+    a[:key] = b[:key] = 1
+    assert_equal 1, a[:key]
+    assert_equal 1, b[:key]
+    assert_nil a['key']
+    assert_equal 1, b['key']
+
+    a.replace b
+    assert_equal 1, a['key']
+    a[:key2] = 2
+    assert_equal 2, a['key2']
+  end
 end
 

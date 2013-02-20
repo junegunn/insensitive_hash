@@ -1,6 +1,20 @@
+# @author Junegunn Choi <junegunn.c@gmail.com>
+# @!attribute [r] encoder
+#   @return [Proc] Key encoding Proc
 class InsensitiveHash < Hash
+  attr_reader :encoder
+
   class KeyClashError < Exception
   end
+
+  DEFAULT_ENCODER = proc { |key|
+    case key
+    when String, Symbol
+      key.to_s.downcase.gsub(' ', '_')
+    else
+      key
+    end
+  }
 
   def initialize default = nil, &block
     if block_given?
@@ -10,12 +24,13 @@ class InsensitiveHash < Hash
       super
     end
 
-    @key_map    = {}
-    @safe       = false
+    @key_map = {}
+    @safe    = false
+    @encoder = DEFAULT_ENCODER
   end
 
   # Sets whether to detect key clashes
-  # @param [Boolean] 
+  # @param [Boolean]
   # @return [Boolean]
   def safe= s
     raise ArgumentError.new("Neither true nor false") unless [true, false].include?(s)
@@ -26,7 +41,22 @@ class InsensitiveHash < Hash
   def safe?
     @safe
   end
-  
+
+  # @param [Proc] prc Key encoding Proc
+  # @return [Proc]
+  def encoder= prc
+    raise ArgumentError, "Proc object required" unless prc.is_a?(Proc)
+
+    kvs = to_a
+    clear
+    @encoder = prc
+    kvs.each do |pair|
+      store *pair
+    end
+
+    prc
+  end
+
   # Returns a normal, sensitive Hash
   # @return [Hash]
   def to_hash
@@ -87,6 +117,7 @@ class InsensitiveHash < Hash
     super other
 
     self.safe = other.respond_to?(:safe?) ? other.safe? : safe?
+    self.encoder = other.respond_to?(:encoder) ? other.encoder : DEFAULT_ENCODER
 
     @key_map.clear
     self.each do |k, v|
@@ -151,12 +182,7 @@ private
   end
 
   def encode key
-    case key
-    when String, Symbol
-      key.to_s.downcase.gsub(' ', '_')
-    else
-      key
-    end
+    @encoder.call key
   end
 
   def detect_clash hash

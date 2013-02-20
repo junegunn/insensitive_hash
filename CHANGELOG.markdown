@@ -1,3 +1,6 @@
+### 0.3.1
+* Supports custom key encoder
+
 ### 0.3.0
 * "Inherited insensitivity" had been a great source of confusion,
   as it stores transformed version of the given Array of Hash.

@@ -8,10 +8,10 @@ Installation
 gem install insensitive_hash
 ```
 
-Examples
---------
+Instantiation
+-------------
 
-### Instantiation
+### Hash#insensitive
 
 ```ruby
 require 'insensitive_hash'
@@ -24,7 +24,7 @@ ih['ABC']         # 1
 ih[:Hello_World]  # true
 ```
 
-### Instantiation without monkey-patching Hash
+### Without monkey-patching Hash
 
 If you don't like to have Hash#insensitive method, `require 'insensitive_hash/minimal'`
 
@@ -49,7 +49,9 @@ h = ih.sensitive
 h = ih.to_hash
 ```
 
-### Basic usage
+Basic usage
+-----------
+
 ```ruby
 ih = {:abc => 1, 'DEF' => 2}.insensitive
 
@@ -71,7 +73,8 @@ ih.delete :Abc     # 10
 ih.keys            # ['DEF']
 ```
 
-### "Inherited insensitivity"
+Inherited insensitivity
+-----------------------
 
 When InsensitiveHash is built from another Hash,
 descendant Hash values are recursively converted to be insensitive
@@ -103,7 +106,7 @@ ih2 = ih.insensitive
 ih2['ABC']['DEF']    # true
 ```
 
-### Processing case-insensitive YAML input
+### Example: Processing case-insensitive YAML input
 ```ruby
 db = YAML.load(File.read 'database.yml').insensitive
 
@@ -112,7 +115,41 @@ db['Development']['ADAPTER']
 db[:production][:adapter]
 ```
 
-### Enabling key-clash detection (Safe mode)
+Customizing insensitivity
+-------------------------
+
+You can provide a Proc object as the key encoder which determines the level of insensitivity.
+
+### Default encoder
+
+The default encoder is as follows.
+
+```ruby
+InsensitiveHash::DEFAULT_ENCODER =
+  proc { |key|
+    case key
+    when String, Symbol
+      key.to_s.downcase.gsub(' ', '_')
+    else
+      key
+    end
+  }
+```
+
+### Encoder examples
+
+```ruby
+h1 = {}.insensitive(:encoder => proc { |key| key.to_s })
+h2 = {}.insensitive(:encoder => proc { |key| key.to_s.downcase })
+h3 = {}.insensitive(:encoder => proc { |key| key.to_s.downcase.gsub(/\s+/, '_') })
+
+# Without `insensitive` method
+h4 = InsensitiveHash.new
+h4.encoder = proc { |key| key.to_s }
+```
+
+Enabling key-clash detection (Safe mode)
+----------------------------------------
 ```ruby
 ih = InsensitiveHash.new
 ih.safe = true
@@ -127,7 +164,7 @@ h['Hello World']  # 2
 ```
 
 ## Contributing to insensitive_hash
- 
+
 * Check out the latest master to make sure the feature hasn't been implemented or the bug hasn't been fixed yet
 * Check out the issue tracker to make sure someone already hasn't requested it and/or contributed it
 * Fork the project
@@ -138,6 +175,5 @@ h['Hello World']  # 2
 
 ## Copyright
 
-Copyright (c) 2012 Junegunn Choi. See LICENSE.txt for
-further details.
+Copyright (c) 2013 Junegunn Choi. See LICENSE.txt for further details.
 
