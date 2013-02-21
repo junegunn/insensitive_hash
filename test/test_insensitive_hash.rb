@@ -177,11 +177,16 @@ class TestInsensitiveHash < Test::Unit::TestCase
   def test_merge
     [:merge, :update].each do |method|
       ih = InsensitiveHash[:a => 1, 'hello world' => 2]
-      ih2 = ih.send(method, :b => 2)
+      nh = { :d => :e }
+      ih2 = ih.send(method, :b => 2, :c => nh)
 
       assert_keys [:a, 'hello world'], ih.keys
-      assert_keys [:a, 'hello world', :b], ih2.keys
+      assert_keys [:a, 'hello world', :b, :c], ih2.keys
       assert ih2.has_key?('B'), 'correctly merged another hash'
+      # No recursive merge
+      assert_equal :e, ih2[:c][:d]
+      assert_equal nil, ih2[:c][:D]
+      assert_equal nh.object_id, ih2[:c].object_id
 
       assert_equal 2, ih[:hello_world]
       assert_equal 2, ih.send(method, :b => 2)[:hello_world]
@@ -216,6 +221,25 @@ class TestInsensitiveHash < Test::Unit::TestCase
 
       ih2.delete 'b'
       assert ih2.has_key?('B') == false
+    end
+  end
+
+  def test_merge_recursive!
+    [:merge_recursive!, :update_recursive!].each do |method|
+      ih = InsensitiveHash.new
+      ih[:a] = 1
+      ih[:b] = 2
+
+      nh = { 'b' => 3, :c => :d }
+      ih.send(method, nh)
+      assert_equal 3, ih[:b]
+      assert_equal :d, ih['C']
+
+      ih.safe = true
+      nh = { 'd' => 4, 'D' => 5 }
+      assert_raise(InsensitiveHash::KeyClashError) { ih.send(method, nh) }
+      ih.safe = false
+      ih.send(method, nh)
     end
   end
 
@@ -395,7 +419,7 @@ class TestInsensitiveHash < Test::Unit::TestCase
   def test_has_key_after_delete
     set = [:a, :A, 'a', 'A', :b, :B, 'b', 'B']
     h = InsensitiveHash[ :a => 1, :b => 2 ]
-    
+
     set.each { |s| assert h.has_key?(s) }
     h.delete_if { |k, v| true }
     set.each { |s| assert !h.has_key?(s) }
@@ -476,7 +500,7 @@ class TestInsensitiveHash < Test::Unit::TestCase
   end
 
   def test_underscore_inheritance
-    h = 
+    h =
       {
         'Key with spaces' => {
           'Another key with spaces' => 1
@@ -545,7 +569,12 @@ class TestInsensitiveHash < Test::Unit::TestCase
     assert_equal true, a[:HELLO_WORLD]
 
     # Update again
-    a.encoder = proc { |key| key.to_s }
+    callable = Class.new {
+      def call key
+        key.to_s
+      end
+    }.new
+    a.encoder = callable
     assert_equal true, a[:"hello world"]
     assert_equal nil, a['HELLO WORLD']
     assert_equal nil, a[:hello_world]
@@ -575,6 +604,21 @@ class TestInsensitiveHash < Test::Unit::TestCase
     assert_equal 1, a['key']
     a[:key2] = 2
     assert_equal 2, a['key2']
+  end
+
+  def test_encoder_nested
+    [ { :a => { :b => { :c => :d } } },
+      { :a => { :b => { :c => :d }.insensitive } },
+    ].each do |h|
+      ih = h.insensitive(:encoder => proc { |key| 1 })
+      assert ih.has_key?(:anything)
+      assert_equal :d, ih[:a][:b][:c]
+      assert_equal :b, ih[:any].keys.first
+      assert_equal :d, ih[:any][:any][:c]
+      assert_equal :d, ih[:any][:any][:C]
+      assert_instance_of InsensitiveHash, ih[:any][:any]
+      assert_equal :d, ih[:any][:any][:any]
+    end
   end
 end
 

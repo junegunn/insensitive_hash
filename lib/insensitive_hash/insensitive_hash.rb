@@ -1,9 +1,11 @@
+# Insensitive Hash.
 # @author Junegunn Choi <junegunn.c@gmail.com>
 # @!attribute [r] encoder
-#   @return [Proc] Key encoding Proc
+#   @return [#call] Key encoder. Determines the level of insensitivity.
 class InsensitiveHash < Hash
   attr_reader :encoder
 
+  # Thrown when safe mode is on and another Hash with conflicting keys cannot be merged safely
   class KeyClashError < Exception
   end
 
@@ -42,10 +44,10 @@ class InsensitiveHash < Hash
     @safe
   end
 
-  # @param [Proc] prc Key encoding Proc
-  # @return [Proc]
+  # @param [#call] prc Key encoder. Determines the level of insensitivity.
+  # @return [#call]
   def encoder= prc
-    raise ArgumentError, "Proc object required" unless prc.is_a?(Proc)
+    raise ArgumentError, "Encoder must respond to :call" unless prc.respond_to?(:call)
 
     kvs = to_a
     clear
@@ -64,10 +66,11 @@ class InsensitiveHash < Hash
   end
   alias sensitive to_hash
 
+  # @see http://www.ruby-doc.org/core-1.9.3/Hash.html Hash
   def self.[] *init
     h = Hash[*init]
     InsensitiveHash.new.tap do |ih|
-      ih.merge! h
+      ih.merge_recursive! h
     end
   end
 
@@ -79,6 +82,7 @@ class InsensitiveHash < Hash
     EVAL
   end
 
+  # @see http://www.ruby-doc.org/core-1.9.3/Hash.html Hash
   def []= key, value
     delete key
     ekey = encode key
@@ -87,15 +91,17 @@ class InsensitiveHash < Hash
   end
   alias store []=
 
+  # @see http://www.ruby-doc.org/core-1.9.3/Hash.html Hash
   def merge! other_hash
     detect_clash other_hash
     other_hash.each do |key, value|
-      deep_set key, value
+      store key, value
     end
     self
   end
   alias update! merge!
 
+  # @see http://www.ruby-doc.org/core-1.9.3/Hash.html Hash
   def merge other_hash
     InsensitiveHash.new.tap do |ih|
       ih.replace self
@@ -104,15 +110,30 @@ class InsensitiveHash < Hash
   end
   alias update merge
 
+  # Merge another hash recursively.
+  # @param [Hash|InsensitiveHash] other_hash
+  # @return [self]
+  def merge_recursive! other_hash
+    detect_clash other_hash
+    other_hash.each do |key, value|
+      deep_set key, value
+    end
+    self
+  end
+  alias update_recursive! merge_recursive!
+
+  # @see http://www.ruby-doc.org/core-1.9.3/Hash.html Hash
   def delete key, &block
     super lookup_key(key, true), &block
   end
 
+  # @see http://www.ruby-doc.org/core-1.9.3/Hash.html Hash
   def clear
     @key_map.clear
     super
   end
 
+  # @see http://www.ruby-doc.org/core-1.9.3/Hash.html Hash
   def replace other
     super other
 
@@ -126,27 +147,32 @@ class InsensitiveHash < Hash
     end
   end
 
+  # @see http://www.ruby-doc.org/core-1.9.3/Hash.html Hash
   def shift
     super.tap do |ret|
       @key_map.delete_if { |k, v| v == ret.first }
     end
   end
 
+  # @see http://www.ruby-doc.org/core-1.9.3/Hash.html Hash
   def values_at *keys
     keys.map { |k| self[k] }
   end
 
+  # @see http://www.ruby-doc.org/core-1.9.3/Hash.html Hash
   def fetch *args, &block
     args[0] = lookup_key(args[0]) if args.first
     super *args, &block
   end
 
+  # @see http://www.ruby-doc.org/core-1.9.3/Hash.html Hash
   def dup
     super.tap { |copy|
       copy.instance_variable_set :@key_map, @key_map.dup
     }
   end
 
+  # @see http://www.ruby-doc.org/core-1.9.3/Hash.html Hash
   def clone
     super.tap { |copy|
       copy.instance_variable_set :@key_map, @key_map.dup
@@ -162,9 +188,16 @@ private
   def wrap value
     case value
     when InsensitiveHash
-      value
+      value.tap { |ih|
+        ih.safe = safe?
+        ih.encoder = encoder
+      }
     when Hash
-      InsensitiveHash[value]
+      InsensitiveHash.new.tap { |ih|
+        ih.safe = safe?
+        ih.encoder = encoder
+        ih.merge_recursive!(value)
+      }
     when Array
       value.map { |v| wrap v }
     else

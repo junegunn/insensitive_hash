@@ -1,14 +1,14 @@
-### 0.3.1
+### 0.3.2
 * Supports custom key encoder
+* Added `InsensitiveHash#merge_recursive!`
 
 ### 0.3.0
+* Now allowing underscores for spaces is by default on, and cannot be turned off.
 * "Inherited insensitivity" had been a great source of confusion,
   as it stores transformed version of the given Array of Hash.
   From 0.3.0, Hash values and descendant Hashes are converted to be insensitive
-  only on the initialization of InsensitiveHash or on `underscore=` call.
+  only on the initialization of InsensitiveHash.
   Refer to the following code
-* Now allowing underscores for spaces is by default on, and cannot be turned off.
-
 ```ruby
   ih = {}.insensitive
   ih[:a] = { :b => :c }
@@ -19,7 +19,6 @@
   ih2 = ih.insensitive
   ih2[:a]['B']           # :c
 ```
-* `:underscore` option is on by default
 
 ### 0.2.4
 * Bug fix: Invalid `dup`, `clone` behavior

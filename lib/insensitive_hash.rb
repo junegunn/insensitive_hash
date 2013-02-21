@@ -7,11 +7,13 @@ class Hash
   # @option options [Proc] :encoder Key encoding Proc
   # @return [InsensitiveHash]
   def insensitive options = {}
-    InsensitiveHash[self].tap do |ih|
+    InsensitiveHash.new.tap do |ih|
       ih.safe         = options[:safe] if options.has_key?(:safe)
       ih.encoder      = options[:encoder] if options.has_key?(:encoder)
       ih.default      = self.default
       ih.default_proc = self.default_proc if self.default_proc
+
+      ih.merge_recursive!(self)
     end
   end
 end

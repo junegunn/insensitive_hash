@@ -76,9 +76,8 @@ ih.keys            # ['DEF']
 Inherited insensitivity
 -----------------------
 
-When InsensitiveHash is built from another Hash,
-descendant Hash values are recursively converted to be insensitive
-(Useful when processing YAML inputs)
+When an InsensitiveHash is built from another Hash,
+descendant Hash values are recursively converted to be insensitive.
 
 ```ruby
 
@@ -90,7 +89,7 @@ ih['one'].first.first.first['A']['b'][:C]  # 'd'
 ```
 
 However, once InsensitiveHash is initialized,
-descendant Hashes are not automatically converted.
+descendant Hashes (or Hashes in Arrays) are not automatically converted.
 
 ```ruby
 ih = {}.insensitive
@@ -99,7 +98,7 @@ ih[:abc] = { :def => true }
 ih['ABC']['DEF']     # nil
 ```
 
-Simply build a new InsensitiveHash again if you need recursive conversion.
+Simply build a new InsensitiveHash out of it if you need recursive conversion.
 
 ```ruby
 ih2 = ih.insensitive
@@ -107,6 +106,7 @@ ih2['ABC']['DEF']    # true
 ```
 
 ### Example: Processing case-insensitive YAML input
+
 ```ruby
 db = YAML.load(File.read 'database.yml').insensitive
 
@@ -118,7 +118,7 @@ db[:production][:adapter]
 Customizing insensitivity
 -------------------------
 
-You can provide a Proc object as the key encoder which determines the level of insensitivity.
+You can provide a `#call`-able object (duck-typing) as the key encoder which determines the level of insensitivity.
 
 ### Default encoder
 
@@ -139,13 +139,9 @@ InsensitiveHash::DEFAULT_ENCODER =
 ### Encoder examples
 
 ```ruby
-h1 = {}.insensitive(:encoder => proc { |key| key.to_s })
-h2 = {}.insensitive(:encoder => proc { |key| key.to_s.downcase })
-h3 = {}.insensitive(:encoder => proc { |key| key.to_s.downcase.gsub(/\s+/, '_') })
-
-# Without `insensitive` method
-h4 = InsensitiveHash.new
-h4.encoder = proc { |key| key.to_s }
+ih1 = {}.insensitive(:encoder => proc { |key| key.to_s })
+ih2 = {}.insensitive(:encoder => proc { |key| key.to_s.downcase })
+ih3 = {}.insensitive(:encoder => proc { |key| key.to_s.downcase.gsub(/\s+/, '_') })
 ```
 
 Enabling key-clash detection (Safe mode)
