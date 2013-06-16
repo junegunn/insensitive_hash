@@ -21,7 +21,7 @@ class InsensitiveHash < Hash
   def initialize default = nil, &block
     if block_given?
       raise ArgumentError.new('wrong number of arguments') unless default.nil?
-      super &block
+      super(&block)
     else
       super
     end
@@ -53,7 +53,7 @@ class InsensitiveHash < Hash
     clear
     @encoder = prc
     kvs.each do |pair|
-      store *pair
+      store(*pair)
     end
 
     prc
@@ -162,7 +162,7 @@ class InsensitiveHash < Hash
   # @see http://www.ruby-doc.org/core-1.9.3/Hash.html Hash
   def fetch *args, &block
     args[0] = lookup_key(args[0]) if args.first
-    super *args, &block
+    super(*args, &block)
   end
 
   # @see http://www.ruby-doc.org/core-1.9.3/Hash.html Hash
