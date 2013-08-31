@@ -621,5 +621,13 @@ class TestInsensitiveHash < Test::Unit::TestCase
       assert_equal :d, ih[:any][:any][:any]
     end
   end
-end
 
+  class MyInsensitiveHash < InsensitiveHash
+  end
+
+  def test_subclassing
+    mih = MyInsensitiveHash[{ "a" => { "b" => 3 } }]
+    assert_instance_of MyInsensitiveHash, mih
+    assert_instance_of MyInsensitiveHash, mih["a"]
+  end
+end

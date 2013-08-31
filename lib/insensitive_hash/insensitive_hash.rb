@@ -69,7 +69,7 @@ class InsensitiveHash < Hash
   # @see http://www.ruby-doc.org/core-1.9.3/Hash.html Hash
   def self.[] *init
     h = Hash[*init]
-    InsensitiveHash.new.tap do |ih|
+    self.new.tap do |ih|
       ih.merge_recursive! h
     end
   end
@@ -103,7 +103,7 @@ class InsensitiveHash < Hash
 
   # @see http://www.ruby-doc.org/core-1.9.3/Hash.html Hash
   def merge other_hash
-    InsensitiveHash.new.tap do |ih|
+    self.class.new.tap do |ih|
       ih.replace self
       ih.merge! other_hash
     end
@@ -187,13 +187,13 @@ private
 
   def wrap value
     case value
-    when InsensitiveHash
+    when InsensitiveHash, self.class
       value.tap { |ih|
         ih.safe = safe?
         ih.encoder = encoder
       }
     when Hash
-      InsensitiveHash.new.tap { |ih|
+      self.class.new.tap { |ih|
         ih.safe = safe?
         ih.encoder = encoder
         ih.merge_recursive!(value)
