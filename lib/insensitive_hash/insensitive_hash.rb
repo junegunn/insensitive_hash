@@ -187,7 +187,7 @@ private
 
   def wrap value
     case value
-    when InsensitiveHash, self.class
+    when InsensitiveHash
       value.tap { |ih|
         ih.safe = safe?
         ih.encoder = encoder
